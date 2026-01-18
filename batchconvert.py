@@ -11,8 +11,8 @@ import xml.etree.cElementTree as ET
 
 from ffmpeg_normalize import FFmpegNormalize
 from subtitle_filter import Subtitles
-from utils.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
-from utils.videoinfo import videoInfo
+from src.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
+from src.videoinfo import videoInfo
 from vapoursynth import core, VideoNode
 
 try:
