@@ -56,6 +56,7 @@ class SubtitleTrackInfo(TrackInfo):
         if external:
             if Path(external).exists():
                 self.external = external
+            self.index = 999
 
     def __iter__(self):
         yield "title", self.title
@@ -75,6 +76,12 @@ class SubtitleTrackInfo(TrackInfo):
 
     def getForcedFile(self):
         return "forced-{}".format(self.getOutFile())
+
+    def getOutFile(self):
+        if self.external:
+            return self.external
+        else:
+            return super().getOutFile()
 
 
 class AudioTrackInfo(TrackInfo):
@@ -280,9 +287,10 @@ class Info:
                         track["title"],
                         track["extension"],
                         track["default"],
-                        track["id"],
                         track["language"],
                     )
+                    if "id" in track:
+                        trackInfo.index = track["id"]
                     if "sup2srt" in track:
                         trackInfo.sup2srt = track["sup2srt"]
                     if "filter" in track:
