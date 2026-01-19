@@ -8,7 +8,7 @@ from typing import Self
 try:
     import videoinfo
 except:
-    from utils import videoinfo
+    from src import videoinfo
 
 
 class TrackInfo:
