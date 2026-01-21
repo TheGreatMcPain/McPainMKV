@@ -290,7 +290,7 @@ class Info:
                         track["language"],
                     )
                     if "id" in track:
-                        trackInfo.index = track["id"]
+                        trackInfo.id = track["id"]
                     if "sup2srt" in track:
                         trackInfo.sup2srt = track["sup2srt"]
                     if "filter" in track:
