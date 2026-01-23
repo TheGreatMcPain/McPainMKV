@@ -284,10 +284,10 @@ class Info:
                 for i in range(len(jsonData["subs"])):
                     track = jsonData["subs"][i]
                     trackInfo = SubtitleTrackInfo(
-                        track["title"],
-                        track["extension"],
-                        track["default"],
-                        track["language"],
+                        title=track["title"],
+                        extension=track["extension"],
+                        default=track["default"],
+                        language=track["language"],
                     )
                     if "id" in track:
                         trackInfo.id = track["id"]
