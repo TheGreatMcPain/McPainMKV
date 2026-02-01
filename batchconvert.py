@@ -316,11 +316,17 @@ def mergeMKV(info: Info):
             "0:" + track.title,
             "--language",
             "0:" + track.language,
-            "--default-track",
-            "0:" + str(int(track.default)),
             "--no-chapters",
             track.getOutFile(),
         ]
+        if track.default:
+            cmd += ["--default-track-flag", "0:" + str(int(track.default))]
+        if track.forced:
+            cmd += ["--forced-display-flag", "0:" + str(int(track.forced))]
+        if track.visualImpaired:
+            cmd += ["--visual-impaired-flag", "0:" + str(int(track.visualImpaired))]
+        if track.commentary:
+            cmd += ["--commentary-flag", "0:" + str(int(track.commentary))]
 
     for track in info.subInfo:
         supFile = track.getOutFile()
@@ -333,10 +339,16 @@ def mergeMKV(info: Info):
             "0:" + track.title,
             "--language",
             "0:" + track.language,
-            "--default-track",
-            "0:" + str(int(track.default)),
             supFile,
         ]
+        if track.default:
+            cmd += ["--default-track-flag", "0:" + str(int(track.default))]
+        if track.forced:
+            cmd += ["--forced-display-flag", "0:" + str(int(track.forced))]
+        if track.hearingImpaired:
+            cmd += ["--hearing-impaired-flag", "0:" + str(int(track.hearingImpaired))]
+        if track.commentary:
+            cmd += ["--commentary-flag", "0:" + str(int(track.commentary))]
 
     if Path("chapters.xml").exists():
         cmd += ["--chapters", "chapters.xml"]
@@ -627,11 +639,15 @@ def subtitlesOCR(track: SubtitleTrackInfo):
 def fixPGSSubtitles(track: SubtitleTrackInfo):
     tempFile = Path("temp.sup")
     cmd = BDSUP2SUB + [
-        "--fps-source", "24p",
-        "--fps-target", "24p",
-        "--filter", "mitchell",
-        "--output", tempFile,
-        track.getOutFile()
+        "--fps-source",
+        "24p",
+        "--fps-target",
+        "24p",
+        "--filter",
+        "mitchell",
+        "--output",
+        tempFile,
+        track.getOutFile(),
     ]
     p = sp.Popen(cmd)
     p.communicate()

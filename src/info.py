@@ -43,6 +43,9 @@ class SubtitleTrackInfo(TrackInfo):
         trackId: int = -1,
         language: str = "und",
         sync: int = 0,
+        forced: bool = False,
+        hearingImpaired: bool = False,
+        commentary: bool = False,
         sup2srt: bool = False,
         srtFilter: bool = False,
         external: str = "",
@@ -52,6 +55,9 @@ class SubtitleTrackInfo(TrackInfo):
         self.srtFilter = srtFilter
         self.external: str = external
         self.sourceTrack: TrackInfo | None = None
+        self.forced = forced
+        self.hearingImpaired = hearingImpaired
+        self.commentary = commentary
 
         if external:
             if Path(external).exists():
@@ -66,6 +72,9 @@ class SubtitleTrackInfo(TrackInfo):
         yield "language", self.language
         if self.sync:
             yield "sync", self.sync
+        yield "forced", self.forced
+        yield "hearingImpaired", self.hearingImpaired
+        yield "commentary", self.commentary
         yield "sup2srt", self.sup2srt
         yield "filter", self.srtFilter
         if self.external:
@@ -93,10 +102,16 @@ class AudioTrackInfo(TrackInfo):
         trackId: int = -1,
         language: str = "und",
         sync: int = 0,
+        forced: bool = False,
+        visualImpaired: bool = False,
+        commentary: bool = False,
         convert: dict = {},
     ):
         super().__init__(title, extension, default, trackId, language, sync)
         self.convert = convert
+        self.forced = forced
+        self.visualImpaired = visualImpaired
+        self.commentary = commentary
 
     def __iter__(self):
         yield "title", self.title
@@ -106,6 +121,9 @@ class AudioTrackInfo(TrackInfo):
         yield "language", self.language
         if self.sync:
             yield "sync", self.sync
+        yield "forced", self.forced
+        yield "visualImpaired", self.visualImpaired
+        yield "commentary", self.commentary
         if self.convert:
             yield "convert", self.convert
         else:
@@ -278,6 +296,12 @@ class Info:
                     if "convert" in track:
                         if track["convert"]:
                             trackInfo.convert = track["convert"]
+                    if "forced" in track:
+                        trackInfo.forced = track["forced"]
+                    if "visualImpaired" in track:
+                        trackInfo.visualImpaired = track["visualImpaired"]
+                    if "commentary" in track:
+                        trackInfo.commentary = track["commentary"]
                     self.audioInfo.append(trackInfo)
 
             if "subs" in jsonData:
@@ -297,6 +321,12 @@ class Info:
                         trackInfo.srtFilter = track["filter"]
                     if "sync" in track:
                         trackInfo.sync = track["sync"]
+                    if "forced" in track:
+                        trackInfo.forced = track["forced"]
+                    if "hearingImpaired" in track:
+                        trackInfo.hearingImpaired = track["hearingImpaired"]
+                    if "commentary" in track:
+                        trackInfo.commentary = track["commentary"]
                     if "external" in track:
                         if track["external"]:
                             trackInfo.external = track["external"]
@@ -431,6 +461,7 @@ class Info:
                         filterSrt.sup2srt = True
                         filterSrt.srtFilter = True
                         self.subInfo.append(filterSrt)
+                        template.hearingImpaired = True
                         template.title = " ".join(
                             template.title.split(" ")[:1]
                             + ["SDH"]
