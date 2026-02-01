@@ -620,9 +620,28 @@ def subtitlesOCR(track: SubtitleTrackInfo):
     tempOutFile.replace(outFile)
 
 
+# I found that some PGS subs have minor issues with
+# software like 'sup2srt', or even Jellyfin.
+# I found that running them through bdsup2sub seems to fix
+# these issues most of the time.
+def fixPGSSubtitles(track: SubtitleTrackInfo):
+    tempFile = Path("temp.sup")
+    cmd = BDSUP2SUB + [
+        "--fps-source", "24p",
+        "--fps-target", "24p",
+        "--filter", "mitchell",
+        "--output", tempFile,
+        track.getOutFile()
+    ]
+    p = sp.Popen(cmd)
+    p.communicate()
+    tempFile.replace(track.getOutFile())
+
+
 def convertSubtitles(info: Info):
     for track in info.subInfo:
         if not track.sup2srt and not track.srtFilter:
+            fixPGSSubtitles(track)
             prepForcedSubs(track)
 
     for track in info.subInfo:
