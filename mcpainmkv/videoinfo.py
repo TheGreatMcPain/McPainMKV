@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Class designed for use with my video encoding scripts
 # Assumes that input video is mkv and contains 1 primary video stream
 # and/or 1 Dolby Vision Enhancement Layer video stream.

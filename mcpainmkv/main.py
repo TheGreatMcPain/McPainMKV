@@ -12,8 +12,8 @@ import importlib
 
 from ffmpeg_normalize import FFmpegNormalize
 from subtitle_filter import Subtitles
-from src.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
-from src.videoinfo import videoInfo
+from mcpainmkv.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
+from mcpainmkv.videoinfo import videoInfo
 from vapoursynth import core, VideoNode
 
 if importlib.util.find_spec("psutil"):
@@ -24,7 +24,7 @@ if importlib.util.find_spec("psutil"):
     psutil_process.nice(15)
     print("Setting process ioniceness to idle.")
     if hasattr(psutil_process, "ionice"):
-        psutil_process.ionice(psutil.IOPRIO_CLASS_IDLE, 7)
+        psutil_process.ionice(psutil.IOPRIO_CLASS_IDLE)
 
 # Globals
 INFOFILE = "info.json"

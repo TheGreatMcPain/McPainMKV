@@ -1,10 +1,9 @@
-#!/usr/bin/python3
 import json
 import copy
 import subprocess as sp
 from pathlib import Path
 from typing import Self
-from src import videoinfo
+from mcpainmkv import videoinfo
 
 
 class TrackInfo:
