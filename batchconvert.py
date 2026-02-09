@@ -61,9 +61,6 @@ def main():
             convertMKV(INFOFILE)
             os.chdir(currentDir)
 
-    print("Cleaning python cache files.")
-    cleanPythonCache(".")
-
     parser.add_argument(
         "--clean",
         dest="clean",
@@ -914,23 +911,6 @@ def syncConfigs(
             config.write_text(str(configInfo))
 
     return
-
-
-# Based on this: https://code-examples.net/en/q/1ba5e27
-def cleanPythonCache(path):
-    if not Path(path).is_dir():
-        print(path, "doesn't exist, or isn't a directory.")
-        exit(1)
-
-    # Search and delete .pyc and .pyo files
-    for p in Path(path).rglob("*.py[co]"):
-        print("Deleting:", p)
-        p.unlink()
-
-    # Search and delete '__pycache__' directories
-    for p in Path(path).rglob("__pycache__"):
-        print("Deleting:", p)
-        p.rmdir()
 
 
 if __name__ == "__main__":
