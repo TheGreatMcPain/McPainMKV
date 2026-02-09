@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "McPainMKV"
-version = ["version"]
+dynamic = ["version"]
 description = "My personal mkv converter for my media server."
 authors = [
     { name="TheGreatMcPain", email="james@thegreatmcpain.xyz" }
