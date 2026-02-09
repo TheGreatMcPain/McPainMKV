@@ -8,6 +8,7 @@ import shutil
 import subprocess as sp
 import threading
 import xml.etree.cElementTree as ET
+import importlib
 
 from ffmpeg_normalize import FFmpegNormalize
 from subtitle_filter import Subtitles
@@ -15,15 +16,15 @@ from src.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
 from src.videoinfo import videoInfo
 from vapoursynth import core, VideoNode
 
-try:
+if importlib.util.find_spec("psutil"):
     import psutil
 
+    psutil_process = psutil.Process()
     print("Setting process niceness to 15.")
-    psutil.Process().nice(15)
+    psutil_process.nice(15)
     print("Setting process ioniceness to idle.")
-    psutil.Process().ionice(psutil.IOPRIO_CLASS_IDLE, 7)
-except:
-    pass
+    if hasattr(psutil_process, "ionice"):
+        psutil_process.ionice(psutil.IOPRIO_CLASS_IDLE, 7)
 
 # Globals
 INFOFILE = "info.json"
@@ -667,7 +668,6 @@ def convertSubtitles(info: Info):
             prepForcedSubs(track)
 
     for track in info.subInfo:
-
         if track.sup2srt:
             if Path(track.getOutFile()).exists():
                 print(track.getOutFile(), "already exists! skipping...")
