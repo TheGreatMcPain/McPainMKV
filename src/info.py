@@ -4,11 +4,7 @@ import copy
 import subprocess as sp
 from pathlib import Path
 from typing import Self
-
-try:
-    import videoinfo
-except:
-    from src import videoinfo
+from src import videoinfo
 
 
 class TrackInfo:
