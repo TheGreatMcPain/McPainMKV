@@ -147,6 +147,13 @@ def main():
         default=[],
     )
     parser_config.add_argument(
+        "--vapoursynth",
+        dest="vapoursynth",
+        help="Use external vapoursynth script for video processing.",
+        type=str,
+        default="",
+    )
+    parser_config.add_argument(
         "--config",
         "-c",
         dest="configFile",
@@ -221,6 +228,8 @@ def main():
             srtFilter=args.configSrtFilter,
         )
         test.filterLanguages(audLangs=audLangs, subLangs=subLangs)
+
+        test.videoInfo.vapoursynthScript = args.vapoursynth
 
         if args.configFile:
             print("Writting to '{}'".format(args.configFile))
