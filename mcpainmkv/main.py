@@ -26,10 +26,6 @@ if importlib.util.find_spec("psutil"):
     if hasattr(psutil_process, "ionice"):
         psutil_process.ionice(psutil.IOPRIO_CLASS_IDLE)
 
-# Globals
-INFOFILE = "info.json"
-RESUME = "resume-file"
-
 # BDSup2Sub Settings #
 # Use java version
 # BDSUP2SUB = ['/usr/bin/java', '-jar',
@@ -40,36 +36,27 @@ BDSUP2SUB = ["bdsup2sub++"]
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="batchconvert",
+        prog=sys.argv[0],
         description="Manipulates Bluray remuxes for use in media server.",
     )
 
-    folders = []
-    if Path(INFOFILE).exists():
-        folders.append(Path.cwd())
-    else:
-        for x in Path().cwd().iterdir():
-            if x.is_dir():
-                if x.joinpath(INFOFILE).exists():
-                    folders.append(x)
-
-    if len(sys.argv) == 1:
-        currentDir = Path.cwd()
-        for folder in folders:
-            print("Entering directory:", folder)
-            os.chdir(folder)
-            print(folders.index(folder), "out of", len(folders), "done.\n")
-            convertMKV(INFOFILE)
-            os.chdir(currentDir)
-
-    parser.add_argument(
+    subparser = parser.add_subparsers(title="Commands", dest="command", required=True)
+    parser_convert = subparser.add_parser("convert", help="Start converting.")
+    parser_convert.add_argument(
+        "--config-name",
+        dest="configName",
+        help="Change the name of the config files.",
+        type=str,
+        default="info.json",
+    )
+    parser_convert.add_argument(
         "--clean",
         dest="clean",
         default=False,
         action=argparse.BooleanOptionalAction,
         help="Delete generated files.",
     )
-    parser.add_argument(
+    parser_convert.add_argument(
         "--clean-sources",
         dest="cleanSources",
         default=False,
@@ -77,11 +64,19 @@ def main():
         help="Delete source files.",
     )
 
-    subparser = parser.add_subparsers(help="subcommand help")
-    parser_config = subparser.add_parser("config", help="config help")
-    parser_config.add_argument("sourceFile")
+    parser_config = subparser.add_parser(
+        "config", help="Generate 'info.json' configuration."
+    )
+    parser_config.add_argument(
+        "--input",
+        "-i",
+        dest="sourceFile",
+        type=str,
+        help="Input '.mkv' file",
+    )
     parser_config.add_argument(
         "--title",
+        "-t",
         dest="configTitle",
         type=str,
         help="Title of output file.",
@@ -89,12 +84,14 @@ def main():
     )
     parser_config.add_argument(
         "--output",
+        "-o",
         dest="configOutputFile",
         help="File name of output.",
         default="Insert Title Here.mkv",
     )
     parser_config.add_argument(
         "--nightmode",
+        "-n",
         dest="configNightMode",
         help="Add 'nightmode' tracks based on track index.",
         nargs="+",
@@ -103,6 +100,7 @@ def main():
     )
     parser_config.add_argument(
         "--sup2srt",
+        "-st",
         dest="configSup2Srt",
         help="Add text based subtitle tracks generated via 'sup2srt'.",
         nargs="+",
@@ -111,6 +109,7 @@ def main():
     )
     parser_config.add_argument(
         "--srt-filter",
+        "-sf",
         dest="configSrtFilter",
         help="Enable subtitle filter for text based subtitles.",
         nargs="+",
@@ -119,6 +118,7 @@ def main():
     )
     parser_config.add_argument(
         "--languages",
+        "-l",
         dest="configLangs",
         action="extend",
         nargs="+",
@@ -128,6 +128,7 @@ def main():
     )
     parser_config.add_argument(
         "--audio-languages",
+        "-al",
         dest="configAudLangs",
         action="extend",
         nargs="+",
@@ -137,6 +138,7 @@ def main():
     )
     parser_config.add_argument(
         "--sub-languages",
+        "-sl",
         action="extend",
         dest="configSubLangs",
         nargs="+",
@@ -146,6 +148,7 @@ def main():
     )
     parser_config.add_argument(
         "--vapoursynth",
+        "-vs",
         dest="vapoursynth",
         help="Use external vapoursynth script for video processing.",
         type=str,
@@ -157,10 +160,12 @@ def main():
         dest="configFile",
         type=str,
         help="Config file output path.",
-        default="",
+        default="info.json",
     )
 
-    parser_sync_config = subparser.add_parser("syncconfigs", help="syncconfigs help")
+    parser_sync_config = subparser.add_parser(
+        "syncconfigs", help="Copy parts of an 'info.json' to a bunch of configs."
+    )
     parser_sync_config.add_argument(
         "--base", "-b", dest="syncBase", type=str, help="base config file"
     )
@@ -184,23 +189,47 @@ def main():
         "-a",
         dest="syncAudio",
         action=argparse.BooleanOptionalAction,
-        help='Sync a property from config\'s "audio" section.',
+        help="Sync a property from config's 'audio' section.",
     )
     parser_sync_config.add_argument(
         "--subtitles",
         "-s",
         dest="syncSubtitles",
         action=argparse.BooleanOptionalAction,
-        help='Sync a property from config\'s "subtitle" section.',
+        help="Sync a property from config's 'subtitle' section.",
     )
     args = parser.parse_args()
 
-    if args.clean:
-        cleanFiles(folders, INFOFILE)
-    if args.cleanSources:
-        cleanSourceFiles(folders, INFOFILE)
+    if "convert" in args.command:
+        folders = []
+        infoFile = args.configName
+        if Path(infoFile).exists():
+            folders.append(Path.cwd())
+        else:
+            for x in Path().cwd().iterdir():
+                if x.is_dir():
+                    if x.joinpath(infoFile).exists():
+                        folders.append(x)
 
-    if "syncBase" in args:
+        if not folders:
+            print("No jobs found. Exiting...")
+            return
+
+        currentDir = Path.cwd()
+        for folder in folders:
+            print("Entering directory:", folder)
+            os.chdir(folder)
+            print(folders.index(folder), "out of", len(folders), "done.\n")
+            convertMKV(infoFile)
+            os.chdir(currentDir)
+
+        if args.clean:
+            cleanFiles(folders, infoFile)
+        if args.cleanSources:
+            cleanSourceFiles(folders, infoFile)
+        return
+
+    if "syncconfigs" in args.command:
         syncConfigs(
             args.syncBase,
             args.syncConfigs,
@@ -208,8 +237,9 @@ def main():
             args.syncAudio,
             args.syncSubtitles,
         )
+        return
 
-    if "sourceFile" in args:
+    if "config" in args.command:
         audLangs = args.configLangs
         subLangs = args.configLangs
         if args.configAudLangs:
@@ -217,7 +247,7 @@ def main():
         if args.configSubLangs:
             subLangs = args.configSubLangs
 
-        test = Info(
+        outConfig = Info(
             sourceMKV=args.sourceFile,
             title=args.configTitle,
             outputFile=args.configOutputFile,
@@ -225,16 +255,17 @@ def main():
             sup2srt=args.configSup2Srt,
             srtFilter=args.configSrtFilter,
         )
-        test.filterLanguages(audLangs=audLangs, subLangs=subLangs)
+        outConfig.filterLanguages(audLangs=audLangs, subLangs=subLangs)
 
-        test.videoInfo.vapoursynthScript = args.vapoursynth
+        outConfig.videoInfo.vapoursynthScript = args.vapoursynth
 
         if args.configFile:
             print("Writting to '{}'".format(args.configFile))
             configPath = Path(args.configFile)
-            configPath.write_text(str(test))
+            configPath.write_text(str(outConfig))
 
-        print(test)
+        print(outConfig)
+        return
 
 
 def cleanSourceFiles(folders: list, infoFile: str):
