@@ -20,7 +20,7 @@ class videoInfo:
     HDR10ContentLightLeveData = None
     X265HDR10MasterDisplayString = None
     X265HDR10CLLString = None
-    DolbyVision = False
+    DolbyVision: None | int = None
     DVTrack = 0
     HDR10Plus = False
 
@@ -101,13 +101,15 @@ class videoInfo:
 
                 self.HDR10Plus = self.__isHDR10Plus(sideDataList)
 
-                self.DolbyVision = self.__isDolbyVision(sideDataList)
+                self.DolbyVision = self.__isDolbyVision(sideDataList, stream)
                 # Sometimes DV metadata is located on a separate stream.
                 if self.DolbyVision:
                     self.DVTrack = int(stream["index"])
 
                 # I don't want to overwrite our HDR10 metadata.
                 if self.HDR10:
+                    continue
+                if self.DolbyVision:
                     continue
 
                 self.HDR10MasterDisplayData = self.__getMasterDisplayData(sideDataList)
@@ -155,8 +157,12 @@ class videoInfo:
             ),
             stdout=sp.PIPE,
         )
-        DoviProcess = sp.Popen(doviCmd, stdin=ffmpegProcess.stdout)
-        DoviProcess.communicate()
+        if self.DolbyVision == 8:
+            with open(outFile, "wb") as f:
+                f.write(ffmpegProcess.communicate()[0])
+        else:
+            DoviProcess = sp.Popen(doviCmd, stdin=ffmpegProcess.stdout)
+            DoviProcess.communicate()
         return 0
 
     def extractHDR10PlusMetadata(self):
@@ -318,11 +324,18 @@ class videoInfo:
         )
         return CLLString
 
-    def __isDolbyVision(self, sideDataList):
-        for sideData in sideDataList:
-            if sideData["side_data_type"].lower() == "Dolby Vision Metadata".lower():
-                return True
-        return False
+    def __isDolbyVision(self, sideDataList, streamData) -> None | int:
+        if "Dolby Vision Metadata".lower() in [
+            x["side_data_type"].lower() for x in sideDataList
+        ]:
+            for sideData in streamData["side_data_list"]:
+                if (
+                    sideData["side_data_type"].lower()
+                    == "DOVI configuration record".lower()
+                ):
+                    if "dv_profile" in sideData:
+                        return int(sideData["dv_profile"])
+        return None
 
     def __isHDR10Plus(self, sideDataList):
         for sideData in sideDataList:

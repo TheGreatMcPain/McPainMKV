@@ -418,7 +418,9 @@ def encodeVideo(info: Info):
     if not info.videoInfo.convert:
         if inputInfo.DolbyVision:
             print("Dolby Vision detected!!")
-            print("Extracting video stream and converting it to DV profile 8.1")
+            print("Extracting video stream...")
+            if inputInfo.DolbyVision == 7:
+                print("and converting it to DV profile 8.1")
             inputInfo.extractDoviHEVC(str(tempOutFile))
             tempOutFile.replace(outFile)
             return 0
