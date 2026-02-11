@@ -691,7 +691,7 @@ def fixPGSSubtitles(track: SubtitleTrackInfo):
         tempFile,
         track.getOutFile(),
     ]
-    p = sp.Popen(cmd)
+    p = sp.Popen(cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
     p.communicate()
     tempFile.replace(track.getOutFile())
 
