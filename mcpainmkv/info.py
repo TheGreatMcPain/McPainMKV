@@ -457,7 +457,10 @@ class Info:
                         filterSrt = copy.deepcopy(template)
                         filterSrt.extension = "srt"
                         filterSrt.title = filterSrt.title.replace("PGS", "SRT")
-                        filterSrt.sup2srt = True
+                        if i in sup2srt:
+                            filterSrt.sup2srt = True
+                        else:
+                            filterSrt.sup2srt = False
                         filterSrt.srtFilter = True
                         self.subInfo.append(filterSrt)
                         template.hearingImpaired = True
@@ -466,7 +469,7 @@ class Info:
                             + ["SDH"]
                             + template.title.split(" ")[1:]
                         )
-                    if streamInfo["codec_name"].lower() in "hdmv_pgs_subtitle":
+                    if i in sup2srt:
                         tempSrt = copy.deepcopy(template)
                         tempSrt.extension = "srt"
                         tempSrt.title = tempSrt.title.replace("PGS", "SRT")
