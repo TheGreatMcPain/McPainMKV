@@ -703,7 +703,7 @@ def fixPGSSubtitles(track: SubtitleTrackInfo):
 
 def convertSubtitles(info: Info):
     for track in info.subInfo:
-        if not track.sup2srt and not track.srtFilter:
+        if track.extension == "sup":
             fixPGSSubtitles(track)
             prepForcedSubs(track)
 
