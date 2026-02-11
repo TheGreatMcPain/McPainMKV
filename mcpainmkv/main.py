@@ -201,11 +201,15 @@ def main():
                     if x.joinpath(infoFile).exists():
                         folders.append(x)
 
+        cleaned = False
         if args.clean:
             cleanFiles(folders, infoFile)
+            cleaned = True
         if args.cleanSources:
             cleanSourceFiles(folders, infoFile)
-        return
+            cleaned = True
+        if cleaned:
+            return
 
         if not folders:
             print("No jobs found. Exiting...")
@@ -220,6 +224,7 @@ def main():
             print(folders.index(folder), "out of", len(folders), "done.\n")
             convertMKV(infoFile)
             os.chdir(currentDir)
+        return
 
     if "syncconfigs" in args.command:
         syncConfigs(
