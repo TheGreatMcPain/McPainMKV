@@ -448,7 +448,11 @@ class Info:
         for i in range(len(ffprobeInfo["streams"])):
             template = self.getSubtitleTemplate(ffprobeInfo, i)
             if template:
-                if i in sup2srt:
+                streamInfo = ffprobeInfo["streams"][i]
+                if (
+                    streamInfo["codec_name"].lower() not in "hdmv_pgs_subtitle"
+                    or i in sup2srt
+                ):
                     if i in srtFilter:
                         filterSrt = copy.deepcopy(template)
                         filterSrt.extension = "srt"
