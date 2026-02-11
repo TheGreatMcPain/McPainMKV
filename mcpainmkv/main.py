@@ -16,16 +16,6 @@ from mcpainmkv.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackIn
 from mcpainmkv.videoinfo import videoInfo
 from vapoursynth import core, VideoNode
 
-if importlib.util.find_spec("psutil"):
-    import psutil
-
-    psutil_process = psutil.Process()
-    print("Setting process niceness to 15.")
-    psutil_process.nice(15)
-    print("Setting process ioniceness to idle.")
-    if hasattr(psutil_process, "ionice"):
-        psutil_process.ionice(psutil.IOPRIO_CLASS_IDLE)
-
 # BDSup2Sub Settings #
 # Use java version
 # BDSUP2SUB = ['/usr/bin/java', '-jar',
@@ -215,6 +205,8 @@ def main():
             print("No jobs found. Exiting...")
             return
 
+        beGentlePlz()
+
         currentDir = Path.cwd()
         for folder in folders:
             print("Entering directory:", folder)
@@ -266,6 +258,18 @@ def main():
 
         print(outConfig)
         return
+
+
+def beGentlePlz():
+    if importlib.util.find_spec("psutil"):
+        import psutil
+
+        psutil_process = psutil.Process()
+        print("Setting process niceness to 15.")
+        psutil_process.nice(15)
+        print("Setting process ioniceness to idle.")
+        if hasattr(psutil_process, "ionice"):
+            psutil_process.ionice(psutil.IOPRIO_CLASS_IDLE)
 
 
 def cleanSourceFiles(folders: list, infoFile: str):
