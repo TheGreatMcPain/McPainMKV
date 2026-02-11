@@ -466,11 +466,12 @@ class Info:
                             + ["SDH"]
                             + template.title.split(" ")[1:]
                         )
-                    tempSrt = copy.deepcopy(template)
-                    tempSrt.extension = "srt"
-                    tempSrt.title = tempSrt.title.replace("PGS", "SRT")
-                    tempSrt.sup2srt = True
-                    self.subInfo.append(tempSrt)
+                    if streamInfo["codec_name"].lower() in "hdmv_pgs_subtitle":
+                        tempSrt = copy.deepcopy(template)
+                        tempSrt.extension = "srt"
+                        tempSrt.title = tempSrt.title.replace("PGS", "SRT")
+                        tempSrt.sup2srt = True
+                        self.subInfo.append(tempSrt)
                 self.subInfo.append(template)
 
     def getVideoTemplate(self, ffInfo: dict, inFile: str) -> VideoTrackInfo:
