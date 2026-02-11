@@ -643,7 +643,7 @@ def prepForcedSubs(track: SubtitleTrackInfo):
 def subtitlesFilter(inFile: str):
     print("Creating non-SDH subtitles.")
     srt = Subtitles(inFile)
-    srt.filter()
+    srt.filter(rm_music=False)
     srt.save()
 
 
