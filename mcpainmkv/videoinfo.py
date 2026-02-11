@@ -137,30 +137,29 @@ class videoInfo:
             "-",
         ]
 
-        ffmpegProcess = sp.Popen(
-            (
-                "ffmpeg",
-                "-loglevel",
-                "fatal",
-                "-stats",
-                "-i",
-                self.inFile,
-                "-map",
-                "0:0",
-                "-c:v",
-                "copy",
-                "-bsf:v",
-                "hevc_mp4toannexb",
-                "-f",
-                "hevc",
-                "-",
-            ),
-            stdout=sp.PIPE,
+        ffmpegCmd = (
+            "ffmpeg",
+            "-loglevel",
+            "fatal",
+            "-stats",
+            "-i",
+            self.inFile,
+            "-map",
+            "0:0",
+            "-c:v",
+            "copy",
+            "-bsf:v",
+            "hevc_mp4toannexb",
+            "-f",
+            "hevc",
+            "-",
         )
+
         if self.DolbyVision == 8:
             with open(outFile, "wb") as f:
-                f.write(ffmpegProcess.communicate()[0])
+                ffmpegProcess = sp.run(ffmpegCmd, stdout=f)
         else:
+            ffmpegProcess = sp.Popen(ffmpegCmd, stdout=sp.PIPE)
             DoviProcess = sp.Popen(doviCmd, stdin=ffmpegProcess.stdout)
             DoviProcess.communicate()
         return 0
