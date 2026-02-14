@@ -600,8 +600,9 @@ class Info:
         output.default = False
         output.id = trackid
 
-        if streamInfo["tags"]["language"]:
-            output.language = streamInfo["tags"]["language"]
+        if "language" in streamInfo["tags"]:
+            if streamInfo["tags"]["language"]:
+                output.language = streamInfo["tags"]["language"]
 
         output.title = "{} Subtitles".format(output.language.upper())
 
