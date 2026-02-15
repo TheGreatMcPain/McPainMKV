@@ -178,7 +178,7 @@ class VideoTrackInfo:
         title: str = "",
         language: str = "und",
         output: str = "video.hevc",
-        convert: VideoConvertOptions = True,
+        convert: dict | bool = True,
         twoPass: bool = False,
         x265Opts: list[str] = [],
         vapoursynthScript: str = "",
@@ -189,7 +189,11 @@ class VideoTrackInfo:
         self.language = language
         self.output = output
         self.twoPass = twoPass
-        self.convert = convert
+        self.convert: VideoConvertOptions | bool = False
+        if type(convert) is bool:
+            self.convert = convert
+        elif type(convert) is dict:
+            self.convert = VideoConvertOptions(convert["encode"], convert["removeDV"])
         self.x265Opts = x265Opts
         self.vapoursynthScript = vapoursynthScript
         self.vapoursynthVars = vapoursynthVars
