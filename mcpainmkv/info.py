@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import json
 import copy
 import subprocess as sp
@@ -160,6 +161,16 @@ class AudioTrackInfo(TrackInfo):
         return result
 
 
+@dataclass
+class VideoConvertOptions:
+    encode: bool = False
+    removeDV: bool = False
+
+    def __iter__(self):
+        yield "encode", self.encode
+        yield "removeDV", self.removeDV
+
+
 class VideoTrackInfo:
     def __init__(
         self,
@@ -167,7 +178,7 @@ class VideoTrackInfo:
         title: str = "",
         language: str = "und",
         output: str = "video.hevc",
-        convert: bool = True,
+        convert: VideoConvertOptions = True,
         twoPass: bool = False,
         x265Opts: list[str] = [],
         vapoursynthScript: str = "",
@@ -195,7 +206,12 @@ class VideoTrackInfo:
             self.title = jsonData["title"]
             self.language = jsonData["language"]
             self.output = jsonData["output"]
-            self.convert = jsonData["convert"]
+            if type(jsonData["convert"]) is bool:
+                self.convert = jsonData["convert"]
+            else:
+                convertOpts = VideoConvertOptions()
+                convertOpts.encode = jsonData["convert"]["encode"]
+                convertOpts.removeDV = jsonData["convert"]["removeDV"]
             if "2pass" in jsonData:
                 self.twoPass = jsonData["2pass"]
             self.twoPass = twoPass
@@ -218,7 +234,10 @@ class VideoTrackInfo:
         yield "title", self.title
         yield "language", self.language
         yield "output", self.output
-        yield "convert", self.convert
+        if type(self.convert) is bool:
+            yield "convert", self.convert
+        else:
+            yield "convert", dict(self.convert)
         yield "x265Opts", self.x265Opts
         if self.twoPass:
             yield "2pass", self.twoPass
@@ -503,7 +522,7 @@ class Info:
                 output.language = tags["language"]
 
         output.output = "video.hevc"
-        output.convert = True
+        output.convert = VideoConvertOptions(False, False)
         output.x265Opts = [
             "--preset",
             "medium",

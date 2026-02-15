@@ -121,21 +121,28 @@ class videoInfo:
                 if self.HDR10MasterDisplayData:
                     self.HDR10 = True
 
-    def extractDoviHEVC(self, outFile: str):
+    def __dolbyVisionHEVC(self, outFile: str, remove: bool):
         if not shutil.which(self.DoviTool):
             return 1
 
-        # Convert RPU to profile 8.1 and drop Enhancement Layer.
-        doviCmd = [
-            "dovi_tool",
-            "-m",
-            "2",
-            "convert",
-            "--discard",
-            "--output",
-            outFile,
-            "-",
-        ]
+        doviCmd = []
+        if remove:
+            # Simply removes Dolby Vision from file.
+            doviCmd = ["dovi_tool", "remove", "--output", outFile, "--input", "-"]
+        else:
+            # Convert RPU to profile 8.1 and drop Enhancement Layer.
+            doviCmd = [
+                "dovi_tool",
+                "-m",
+                "2",
+                "convert",
+                "--discard",
+                "--output",
+                outFile,
+                "-",
+            ]
+        if not remove and self.DolbyVision == 8:
+            doviCmd = []
 
         ffmpegCmd = (
             "ffmpeg",
@@ -155,14 +162,20 @@ class videoInfo:
             "-",
         )
 
-        if self.DolbyVision == 8:
-            with open(outFile, "wb") as f:
-                ffmpegProcess = sp.run(ffmpegCmd, stdout=f)
-        else:
+        if doviCmd:
             ffmpegProcess = sp.Popen(ffmpegCmd, stdout=sp.PIPE)
             DoviProcess = sp.Popen(doviCmd, stdin=ffmpegProcess.stdout)
             DoviProcess.communicate()
+        else:
+            with open(outFile, "wb") as f:
+                ffmpegProcess = sp.run(ffmpegCmd, stdout=f)
         return 0
+
+    def extractDoviHEVC(self, outFile: str):
+        self.__dolbyVisionHEVC(outFile, False)
+
+    def removeDoviHEVC(self, outFile: str):
+        self.__dolbyVisionHEVC(outFile, True)
 
     def extractHDR10PlusMetadata(self):
         if not shutil.which(self.HDR10PlusTool):

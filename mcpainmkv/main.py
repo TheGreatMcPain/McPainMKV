@@ -410,18 +410,30 @@ def encodeVideo(info: Info):
     inputInfo = videoInfo(info.sourceMKV)
     tempOutFile = Path("temp-" + info.videoInfo.output)
     outFile = Path(info.videoInfo.output)
+    convert = False
+    removeDV = False
+
+    if type(info.videoInfo.convert) is bool:
+        convert = info.videoInfo.convert
+    else:
+        convert = info.videoInfo.convert.encode
+        removeDV = info.videoInfo.convert.removeDV
 
     if outFile.exists():
         print(outFile, "already exists! skipping...")
         return 0
 
-    if not info.videoInfo.convert:
+    if not convert:
         if inputInfo.DolbyVision:
             print("Dolby Vision detected!!")
             print("Extracting video stream...")
-            if inputInfo.DolbyVision == 7:
-                print("and converting it to DV profile 8.1")
-            inputInfo.extractDoviHEVC(str(tempOutFile))
+            if removeDV:
+                print("and removing DolbyVision from video stream.")
+                inputInfo.removeDoviHEVC(str(tempOutFile))
+            else:
+                if inputInfo.DolbyVision == 7:
+                    print("and converting it to DV profile 8.1")
+                inputInfo.extractDoviHEVC(str(tempOutFile))
             tempOutFile.replace(outFile)
             return 0
 
