@@ -483,7 +483,7 @@ def encodeVideo(info: Info):
                 )
             )
             exit(1)
-        if type(video) != VideoNode:
+        if type(video) is not VideoNode:
             print("'vapoursynthFilter()' did not return VideoNode.")
             exit(1)
         print("Using 'vapoursynthFilter()' from '{}'".format(vapoursynthScriptPath))
@@ -589,7 +589,7 @@ def encodeVideo(info: Info):
             t.join()
     except KeyboardInterrupt:
         # Close the processes stdin, because x265 doesn't do it by itself.
-        if type(encodeProcess) == sp.Popen:
+        if type(encodeProcess) is sp.Popen:
             encodeProcess.terminate()
         exit(0)
 
@@ -914,10 +914,10 @@ def selectKeyFromDict(d: dict):
     selection = int(input("Which property? (between 0 and {}):".format(len(keys) - 1)))
     result = None
     while True:
-        try:
+        if selection in keys:
             result = keys[selection]
             break
-        except:
+        else:
             selection = int(
                 input("Invalid input! (between 0 and {}):".format(len(keys) - 1))
             )
