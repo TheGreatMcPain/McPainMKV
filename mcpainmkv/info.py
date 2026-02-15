@@ -209,9 +209,10 @@ class VideoTrackInfo:
             if type(jsonData["convert"]) is bool:
                 self.convert = jsonData["convert"]
             else:
-                convertOpts = VideoConvertOptions()
-                convertOpts.encode = jsonData["convert"]["encode"]
-                convertOpts.removeDV = jsonData["convert"]["removeDV"]
+                convertOpts = VideoConvertOptions(
+                    jsonData["convert"]["encode"], jsonData["convert"]["removeDV"]
+                )
+                self.convert = convertOpts
             if "2pass" in jsonData:
                 self.twoPass = jsonData["2pass"]
             self.twoPass = twoPass
