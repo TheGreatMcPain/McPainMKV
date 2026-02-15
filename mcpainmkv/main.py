@@ -358,14 +358,6 @@ def mergeMKV(info: Info):
     for track in info.audioInfo:
         if track.sync:
             cmd += ["--sync", "0:" + str(track.sync)]
-        cmd += [
-            "--track-name",
-            "0:" + track.title,
-            "--language",
-            "0:" + track.language,
-            "--no-chapters",
-            track.getOutFile(),
-        ]
         if track.default:
             cmd += ["--default-track-flag", "0:" + str(int(track.default))]
         if track.forced:
@@ -374,6 +366,14 @@ def mergeMKV(info: Info):
             cmd += ["--visual-impaired-flag", "0:" + str(int(track.visualImpaired))]
         if track.commentary:
             cmd += ["--commentary-flag", "0:" + str(int(track.commentary))]
+        cmd += [
+            "--track-name",
+            "0:" + track.title,
+            "--language",
+            "0:" + track.language,
+            "--no-chapters",
+            track.getOutFile(),
+        ]
 
     for track in info.subInfo:
         supFile = track.getOutFile()
@@ -381,13 +381,6 @@ def mergeMKV(info: Info):
             cmd += ["--sync", "0:" + str(track.sync)]
         if track.external:
             supFile = track.external
-        cmd += [
-            "--track-name",
-            "0:" + track.title,
-            "--language",
-            "0:" + track.language,
-            supFile,
-        ]
         if track.default:
             cmd += ["--default-track-flag", "0:" + str(int(track.default))]
         if track.forced:
@@ -396,6 +389,13 @@ def mergeMKV(info: Info):
             cmd += ["--hearing-impaired-flag", "0:" + str(int(track.hearingImpaired))]
         if track.commentary:
             cmd += ["--commentary-flag", "0:" + str(int(track.commentary))]
+        cmd += [
+            "--track-name",
+            "0:" + track.title,
+            "--language",
+            "0:" + track.language,
+            supFile,
+        ]
 
     if Path("chapters.xml").exists():
         cmd += ["--chapters", "chapters.xml"]
