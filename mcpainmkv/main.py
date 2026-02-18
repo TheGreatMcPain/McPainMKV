@@ -952,7 +952,15 @@ def syncConfigs(
             print("Updating:", config)
             config.write_text(str(configInfo))
     if audioInfo:
-        print("Not implemented!")
+        print("Syncing Audio Info")
+        baseAudInfo: list[AudioTrackInfo] = baseInfo.audioInfo
+
+        for config in configs:
+            configInfo = Info(jsonFile=config)
+            configInfo.audioInfo = baseAudInfo
+
+            print("Updating:", config)
+            config.write_text(str(configInfo))
     if subInfo:
         print("Syncing Subtitle Info")
         baseSubInfo: list[SubtitleTrackInfo] = baseInfo.subInfo
