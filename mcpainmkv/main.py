@@ -358,15 +358,15 @@ def mergeMKV(info: Info):
     for track in info.audioInfo:
         if track.sync:
             cmd += ["--sync", "0:" + str(track.sync)]
-        if track.default:
-            cmd += ["--default-track-flag", "0:" + str(int(track.default))]
-        if track.forced:
-            cmd += ["--forced-display-flag", "0:" + str(int(track.forced))]
-        if track.visualImpaired:
-            cmd += ["--visual-impaired-flag", "0:" + str(int(track.visualImpaired))]
-        if track.commentary:
-            cmd += ["--commentary-flag", "0:" + str(int(track.commentary))]
         cmd += [
+            "--default-track-flag",
+            "0:" + str(int(track.default)),
+            "--forced-display-flag",
+            "0:" + str(int(track.forced)),
+            "--visual-impaired-flag",
+            "0:" + str(int(track.visualImpaired)),
+            "--commentary-flag",
+            "0:" + str(int(track.commentary)),
             "--track-name",
             "0:" + track.title,
             "--language",
@@ -381,15 +381,15 @@ def mergeMKV(info: Info):
             cmd += ["--sync", "0:" + str(track.sync)]
         if track.external:
             supFile = track.external
-        if track.default:
-            cmd += ["--default-track-flag", "0:" + str(int(track.default))]
-        if track.forced:
-            cmd += ["--forced-display-flag", "0:" + str(int(track.forced))]
-        if track.hearingImpaired:
-            cmd += ["--hearing-impaired-flag", "0:" + str(int(track.hearingImpaired))]
-        if track.commentary:
-            cmd += ["--commentary-flag", "0:" + str(int(track.commentary))]
         cmd += [
+            "--default-track-flag",
+            "0:" + str(int(track.default)),
+            "--forced-display-flag",
+            "0:" + str(int(track.forced)),
+            "--hearing-impaired-flag",
+            "0:" + str(int(track.hearingImpaired)),
+            "--commentary-flag",
+            "0:" + str(int(track.commentary)),
             "--track-name",
             "0:" + track.title,
             "--language",
