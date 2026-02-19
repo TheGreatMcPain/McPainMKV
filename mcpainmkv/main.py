@@ -914,7 +914,7 @@ def selectKeyFromDict(d: dict):
     selection = int(input("Which property? (between 0 and {}):".format(len(keys) - 1)))
     result = None
     while True:
-        if selection in keys:
+        if selection >= 0 and selection < len(keys):
             result = keys[selection]
             break
         else:
