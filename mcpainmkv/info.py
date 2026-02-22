@@ -266,7 +266,7 @@ class Info:
         self.blurayFile: str = ""
         self.title: str = title
         self.sourceMKV: str = ""
-        self.outputFile: str = ""
+        self.outputFile: str = outputFile
         self.videoInfo: VideoTrackInfo
         self.audioInfo: list[AudioTrackInfo] = []
         self.subInfo: list[SubtitleTrackInfo] = []
