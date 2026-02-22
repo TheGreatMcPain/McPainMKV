@@ -265,7 +265,7 @@ class Info:
         self.blurayPath: str = ""
         self.blurayFile: str = ""
         self.title: str = title
-        self.sourceMKV: str = outputFile
+        self.sourceMKV: str = ""
         self.outputFile: str = ""
         self.videoInfo: VideoTrackInfo
         self.audioInfo: list[AudioTrackInfo] = []
@@ -434,6 +434,8 @@ class Info:
             if "title" in ffprobeInfo["format"]["tags"]:
                 self.title = ffprobeInfo["format"]["tags"]["title"]
         self.outputFile = "{}.mkv".format(self.title)
+        if outputFile:
+            self.outputFile = outputFile
 
         self.videoInfo = self.getVideoTemplate(ffprobeInfo, sourceMKV)
 
