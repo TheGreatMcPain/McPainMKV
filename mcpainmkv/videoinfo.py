@@ -109,8 +109,6 @@ class videoInfo:
                 # I don't want to overwrite our HDR10 metadata.
                 if self.HDR10:
                     continue
-                if self.DolbyVision:
-                    continue
 
                 self.HDR10MasterDisplayData = self.__getMasterDisplayData(sideDataList)
                 self.X265HDR10MasterDisplayString = self.__getX265MasterDisplayString()
