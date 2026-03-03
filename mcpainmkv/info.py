@@ -55,6 +55,30 @@ class SubtitleTrackInfo(TrackInfo):
         self.hearingImpaired = hearingImpaired
         self.commentary = commentary
 
+        if self.sup2srt and self.extension not in "srt":
+            print(
+                "Warning for '{}': 'sup2srt' set, but 'extension' is not '.srt'".format(
+                    self.title
+                )
+            )
+            if self.srtFilter:
+                print(
+                    "Warning for '{}': 'srtFilter' set, but 'extension' is not '.srt'".format(
+                        self.title
+                    )
+                )
+            print("Setting 'extension' to 'srt'.")
+            self.extension = "srt"
+
+        if self.srtFilter and self.extension not in "srt":
+            print(
+                "Warning for title '{}': 'srtFilter' set, but 'extension' is not '.srt'".format(
+                    self.title
+                )
+            )
+            print("Setting 'extension' to 'srt'.")
+            self.extension = "srt"
+
         if external:
             if Path(external).exists():
                 self.external = external
