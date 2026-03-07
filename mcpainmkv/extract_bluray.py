@@ -3,7 +3,7 @@ import subprocess as sp
 import json
 
 
-def extract_bluray(jsonFile: str, blurayDirs: list(str), outFile: str):
+def extract_bluray(jsonFile: str, blurayDirs: list[str], outFile: str):
     jsonFile = Path(jsonFile)
     blurayInfoList = []
 
