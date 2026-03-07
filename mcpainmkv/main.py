@@ -71,7 +71,7 @@ def main():
         "-o",
         dest="configOutputFile",
         help="File name of output.",
-        default="Insert Title Here.mkv",
+        default="",
     )
     parser_config.add_argument(
         "--nightmode",
