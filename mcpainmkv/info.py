@@ -379,7 +379,7 @@ class Info:
             self.generateTemplate(
                 sourceMKV,
                 title=self.title,
-                outputFile=self.outputFile,
+                outputFile=outputFile,
                 nightmode=nightmode,
                 sup2srt=sup2srt,
                 srtFilter=srtFilter,
