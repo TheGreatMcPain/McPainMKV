@@ -1,43 +1,10 @@
-#!/usr/bin/env python3
-import argparse
 from pathlib import Path
 import subprocess as sp
 import json
-import shutil
 
 
-def main():
-    if not shutil.which("mkvmerge"):
-        print("Dependency 'mkvmerge' not found! Is MKVToolNix installed?")
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--bluray-directory",
-        "-d",
-        dest="blurayDirs",
-        action="extend",
-        nargs="+",
-        help="Path to Bluray file structure.",
-        type=str,
-        default=[],
-    )
-    parser.add_argument(
-        "--config-file",
-        "-c",
-        dest="jsonFile",
-        help="Path to '.json' config file.",
-        type=str,
-        default=str(Path(__file__).with_suffix(".json")),
-    )
-    parser.add_argument(
-        "--output-filename",
-        "-o",
-        dest="outFile",
-        help="Name of '.mkv' files",
-        type=str,
-        default="source.mkv",
-    )
-    args = parser.parse_args()
-    jsonFile = Path(args.jsonFile)
+def extract_bluray(jsonFile: str, blurayDirs: list(str), outFile: str):
+    jsonFile = Path(jsonFile)
     blurayInfoList = []
 
     selection = "n"
@@ -47,16 +14,15 @@ def main():
 
     if selection == "y":
         blurayInfoList = json.loads(jsonFile.read_text())
-        if type(blurayInfoList) == dict:
+        if type(blurayInfoList) is dict:
             blurayInfoList = [blurayInfoList]
 
-        for blurayRoot in args.blurayDirs:
+        for blurayRoot in blurayDirs:
             blurayPath = Path(blurayRoot)
 
             if not isBluray(blurayPath):
                 print(blurayPath, "is not a BluRay Directory.")
-                parser.print_usage()
-                exit(1)
+                return
 
             if str(blurayPath) not in [x["blurayDir"] for x in blurayInfoList]:
                 selection = input(
@@ -67,31 +33,28 @@ def main():
                 blurayInfoList.append(blurayInfo)
                 jsonFile.write_text(json.dumps(blurayInfoList))
     else:
-        if len(args.blurayDirs) == 0:
+        if len(blurayDirs) == 0:
             print(
                 jsonFile.relative_to(Path.cwd()),
                 "not found!",
                 "Bluray directory required.",
             )
-            parser.print_usage()
-            exit(1)
+            return
 
-        for blurayRoot in args.blurayDirs:
+        for blurayRoot in blurayDirs:
             blurayPath = Path(blurayRoot)
 
             if not isBluray(blurayPath):
                 print(blurayPath, "is not a BluRay Directory.")
-                parser.print_usage()
-                exit(1)
+                return
 
             blurayInfo = getBlurayInfo(blurayPath)
             blurayInfoList.append(blurayInfo)
             jsonFile.write_text(json.dumps(blurayInfoList))
 
-
     blurayInfoList = filterBlurayInfo(blurayInfoList)
     for blurayInfo in blurayInfoList:
-        batchCreateMKVs(blurayInfo["blurayDir"], blurayInfo["titles"], args.outFile)
+        batchCreateMKVs(blurayInfo["blurayDir"], blurayInfo["titles"], outFile)
 
 
 def isBluray(blurayPath: Path) -> bool:
@@ -239,7 +202,3 @@ def getBlurayInfo(BluRayPath: Path):
         titles.append(title)
     blurayInfo["titles"] = titles
     return blurayInfo
-
-
-if __name__ == "__main__":
-    main()
