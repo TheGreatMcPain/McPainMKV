@@ -1,5 +1,5 @@
 from pathlib import Path
-import subprocess as sp
+import makemkv
 import json
 
 
@@ -93,9 +93,12 @@ def filterBlurayInfo(blurayInfo: list) -> list[dict]:
 
 def batchCreateMKVs(BluRayDir, titles, outFile):
     counter = 0
+    progress = makemkv.ProgressParser()
+    disc = makemkv.MakeMKV(BluRayDir, progress_handler=progress.parse_progress)
     for title in titles:
         print()
         print(counter, "out of", len(titles), "done")
+        output = ""
         fileName = title["filename"]
         inFile: Path = getBluRayFilePath(BluRayDir, fileName)
         if not inFile.exists():
@@ -105,34 +108,23 @@ def batchCreateMKVs(BluRayDir, titles, outFile):
             extrasPath = Path("extras")
             if not extrasPath.is_dir():
                 extrasPath.mkdir()
-            output = extrasPath.joinpath(title["folder"], outFile)
+            output = extrasPath.joinpath(title["folder"])
         else:
-            output = Path(title["folder"], outFile)
+            output = Path(title["folder"])
+        if not output.is_dir():
+            output.mkdir()
 
         if output.exists():
             print(output, "exists!! skipping...")
             continue
-        outputTemp = output.with_name("temp-" + outFile)
 
-        cmd = ["mkvmerge", "--output", str(outputTemp), str(inFile)]
+        discInfo = disc.info()
+        for title in discInfo["titles"]:
+            if fileName in title["source_filename"]:
+                index = discInfo["titles"]
+                disc.mkv(index, output)
 
-        print("Running: ", end="")
-        for x in cmd:
-            print(x, end=" ")
-        print()
-        p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.DEVNULL, universal_newlines=True)
-        if not p.stdout:
-            print("Oof!! Something must of broke!")
-            exit(1)
-
-        for line in p.stdout:
-            line = line.rstrip()
-            if "Progress:" in line:
-                print(f"{line}\r", end="")
-                # Clean the rest of the line.
-                print("\033[K", end="")
         counter += 1
-        outputTemp.replace(output)
 
 
 def getBluRayFilePath(BluRayPath: Path, fileName: Path) -> Path:

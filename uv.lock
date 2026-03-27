@@ -64,6 +64,28 @@ wheels = [
 ]
 
 [[package]]
+name = "iso639-lang"
+version = "2.6.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9b/5a/49bbf16d155192255e7bb37e403b2ac360144992d0d112a865afc62e457f/iso639_lang-2.6.3.tar.gz", hash = "sha256:078ddb7cd0182dcc04367691acc8022ddf7158b6cb09f08f798af823fa864265", size = 319391, upload-time = "2025-07-23T09:04:53.568Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/6b/c7/f6fd3db6c33a164631c39dce2ca26a3794e3abf91b875cc99a43a5565d88/iso639_lang-2.6.3-py3-none-any.whl", hash = "sha256:a6c2fb9f739dca180dc7f48b098880f303bcce2cdf93a4ca3152ed8bbbb94fbb", size = 324990, upload-time = "2025-07-23T09:04:52.221Z" },
+]
+
+[[package]]
+name = "makemkv"
+version = "0.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "iso639-lang" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/07/2c/73d93f536d96d733457f3f0c3aaa3926f0b1a8841c1b0bea4a2b56dadeeb/makemkv-0.3.1.tar.gz", hash = "sha256:d3d9379e4e041ec30c1c815e4cc627c5d419acdd59afc343674e8ad956fc1b3e", size = 27204, upload-time = "2022-09-20T13:12:34.37Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/15/a5/97ff4bfbc2dad68ec3b3c13ea230d0da27d4857ae48ebd6825e4e5cf85df/makemkv-0.3.1-py3-none-any.whl", hash = "sha256:914a9ebb5ee6a3e8c0d5ca3e7e090836aaf8d8bf2f3112ffad8b9f63d3cc710f", size = 16702, upload-time = "2022-09-20T13:12:33.139Z" },
+]
+
+[[package]]
 name = "markdown-it-py"
 version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -80,7 +102,9 @@ name = "mcpainmkv"
 source = { editable = "." }
 dependencies = [
     { name = "ffmpeg-normalize" },
+    { name = "makemkv" },
     { name = "psutil" },
+    { name = "rich" },
     { name = "subtitle-filter" },
     { name = "vapoursynth" },
     { name = "vsstubs" },
@@ -89,7 +113,9 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "ffmpeg-normalize", specifier = ">=1.37.3" },
+    { name = "makemkv", specifier = ">=0.3.1" },
     { name = "psutil", specifier = ">=7.2.2" },
+    { name = "rich", specifier = ">=14.3.2" },
     { name = "subtitle-filter", specifier = ">=1.5.0" },
     { name = "vapoursynth", specifier = ">=73" },
     { name = "vsstubs", specifier = ">=1.0.2" },
