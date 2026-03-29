@@ -121,7 +121,7 @@ def batchCreateMKVs(BluRayDir, titles, outFile):
         discInfo = disc.info()
         for title in discInfo["titles"]:
             if fileName in title["source_filename"]:
-                index = discInfo["titles"]
+                index = discInfo["titles"].index(title)
                 disc.mkv(index, output)
 
         counter += 1
