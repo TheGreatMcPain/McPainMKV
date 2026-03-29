@@ -93,8 +93,8 @@ def filterBlurayInfo(blurayInfo: list) -> list[dict]:
 
 def batchCreateMKVs(BluRayDir, titles, outFile):
     counter = 0
-    progress = makemkv.ProgressParser()
-    disc = makemkv.MakeMKV(BluRayDir, progress_handler=progress.parse_progress)
+    with makemkv.ProgressParser() as progress:
+        disc = makemkv.MakeMKV(BluRayDir, progress_handler=progress.parse_progress)
     for title in titles:
         print()
         print(counter, "out of", len(titles), "done")
