@@ -114,9 +114,9 @@ def batchCreateMKVs(BluRayDir, titles, outFile):
         if not output.is_dir():
             output.mkdir()
 
-        if output.exists():
-            print(output, "exists!! skipping...")
-            continue
+        # if output.:
+        #    print(output, "exists!! skipping...")
+        #    continue
 
         discInfo = disc.info()
         for title in discInfo["titles"]:
