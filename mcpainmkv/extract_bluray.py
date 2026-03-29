@@ -93,6 +93,8 @@ def filterBlurayInfo(blurayInfo: list) -> list[dict]:
 
 def batchCreateMKVs(BluRayDir, titles, outFile):
     counter = 0
+    disc = makemkv.MakeMKV(BluRayDir)
+    discInfo = disc.info()
     for title in titles:
         print()
         print(counter, "out of", len(titles), "done")
@@ -120,12 +122,13 @@ def batchCreateMKVs(BluRayDir, titles, outFile):
                 x.unlink()
 
         with makemkv.ProgressParser() as progress:
-            disc = makemkv.MakeMKV(BluRayDir, progress_handler=progress.parse_progress)
-            discInfo = disc.info()
+            mkvmaker = makemkv.MakeMKV(
+                BluRayDir, progress_handler=progress.parse_progress
+            )
             for title in discInfo["titles"]:
                 if fileName in title["source_filename"]:
                     index = discInfo["titles"].index(title)
-                    disc.mkv(index, output)
+                    mkvmaker.mkv(index, output)
 
         for x in output.glob("*.mkv"):
             x.rename(output.joinpath(outFile))
