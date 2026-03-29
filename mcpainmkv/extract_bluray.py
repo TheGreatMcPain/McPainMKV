@@ -128,7 +128,7 @@ def batchCreateMKVs(BluRayDir, titles, outFile):
                     disc.mkv(index, output)
 
         for x in output.glob("*.mkv"):
-            x.move(output.joinpath(outFile))
+            x.rename(output.joinpath(outFile))
 
         counter += 1
 
