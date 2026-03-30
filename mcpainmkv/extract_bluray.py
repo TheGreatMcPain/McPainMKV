@@ -182,7 +182,7 @@ def getBlurayInfo(BluRayPath: Path, infoFileName: str):
             folder = input("Type the folder name for this title: ")
             outputInfo = Path("extras", folder).joinpath(outputInfo)
             if not Path("extras", folder).exists():
-                Path("extras", folder).mkdir()
+                Path("extras", folder).mkdir(parents=True)
         else:
             folder = input("Type the folder name for this title: ")
             outputInfo = Path(folder).joinpath(outputInfo)
