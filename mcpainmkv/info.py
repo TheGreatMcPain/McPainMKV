@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 import copy
 import subprocess as sp
@@ -275,6 +275,22 @@ class VideoTrackInfo:
             yield "mkvmergeOpts", self.mkvmergeOpts
 
 
+@dataclass
+class InfoGenerateOptions:
+    nightmode: list[int] = field(default_factory=list)
+    sup2srt: list[int] = field(default_factory=list)
+    srtFilter: list[int] = field(default_factory=list)
+    audLangs: list[str] = field(default_factory=list)
+    subLangs: list[str] = field(default_factory=list)
+
+    def __iter__(self):
+        yield "nightmode", self.nightmode
+        yield "sup2srt", self.sup2srt
+        yield "srtFilter", self.srtFilter
+        yield "audLangs", self.audLangs
+        yield "subLangs", self.subLangs
+
+
 class Info:
     def __init__(
         self,
@@ -285,15 +301,32 @@ class Info:
         nightmode: list[int] = [],
         sup2srt: list[int] = [],
         srtFilter: list[int] = [],
+        audLangs: list[str] = [],
+        subLangs: list[str] = [],
     ):
         self.blurayPath: str = ""
         self.blurayFile: str = ""
         self.title: str = title
         self.sourceMKV: str = ""
         self.outputFile: str = outputFile
-        self.videoInfo: VideoTrackInfo
+        self.videoInfo = None
         self.audioInfo: list[AudioTrackInfo] = []
         self.subInfo: list[SubtitleTrackInfo] = []
+
+        # The idea is to store our generateTemplate options
+        # in the json file if 'sourceMKV' is not assigned.
+        self.generateOptions = InfoGenerateOptions()
+        if nightmode:
+            self.generateOptions.nightmode = nightmode
+        if sup2srt:
+            self.generateOptions.sup2srt = sup2srt
+        if srtFilter:
+            self.generateOptions.srtFilter = srtFilter
+        if audLangs:
+            self.generateOptions.audLangs = audLangs
+        if subLangs:
+            self.generateOptions.subLangs = subLangs
+
         if jsonFile:
             jsonData: dict = json.loads(Path(jsonFile).read_text())
             if "blurayPath" in jsonData:
@@ -304,25 +337,26 @@ class Info:
             self.title = jsonData["title"]
             self.outputFile = jsonData["outputFile"]
 
-            self.videoInfo = VideoTrackInfo(
-                title=jsonData["video"]["title"],
-                language=jsonData["video"]["language"],
-                output=jsonData["video"]["output"],
-                convert=jsonData["video"]["convert"],
-            )
-            if "2pass" in jsonData["video"]:
-                self.videoInfo.twoPass = jsonData["video"]["2pass"]
-            if "x265Opts" in jsonData["video"]:
-                self.videoInfo.x265Opts = jsonData["video"]["x265Opts"]
-            if "vapoursynth" in jsonData["video"]:
-                vapoursynth = jsonData["video"]["vapoursynth"]
-                if vapoursynth:
-                    if "script" in vapoursynth:
-                        self.videoInfo.vapoursynthScript = vapoursynth["script"]
-                    if "variables" in vapoursynth:
-                        self.videoInfo.vapoursynthVars = vapoursynth["variables"]
-            if "mkvmergeOpts" in jsonData["video"]:
-                self.videoInfo.mkvmergeOpts = jsonData["video"]["mkvmergeOpts"]
+            if "video" in jsonData:
+                self.videoInfo = VideoTrackInfo(
+                    title=jsonData["video"]["title"],
+                    language=jsonData["video"]["language"],
+                    output=jsonData["video"]["output"],
+                    convert=jsonData["video"]["convert"],
+                )
+                if "2pass" in jsonData["video"]:
+                    self.videoInfo.twoPass = jsonData["video"]["2pass"]
+                if "x265Opts" in jsonData["video"]:
+                    self.videoInfo.x265Opts = jsonData["video"]["x265Opts"]
+                if "vapoursynth" in jsonData["video"]:
+                    vapoursynth = jsonData["video"]["vapoursynth"]
+                    if vapoursynth:
+                        if "script" in vapoursynth:
+                            self.videoInfo.vapoursynthScript = vapoursynth["script"]
+                        if "variables" in vapoursynth:
+                            self.videoInfo.vapoursynthVars = vapoursynth["variables"]
+                if "mkvmergeOpts" in jsonData["video"]:
+                    self.videoInfo.mkvmergeOpts = jsonData["video"]["mkvmergeOpts"]
 
             if "audio" in jsonData:
                 for i in range(len(jsonData["audio"])):
@@ -374,16 +408,33 @@ class Info:
                         if track["external"]:
                             trackInfo.external = track["external"]
                     self.subInfo.append(trackInfo)
+            if "generateOptions" in jsonData:
+                self.generateOptions.nightmode = jsonData["generateOptions"][
+                    "nightmode"
+                ]
+                self.generateOptions.sup2srt = jsonData["generateOptions"]["sup2srt"]
+                self.generateOptions.srtFilter = jsonData["generateOptions"][
+                    "srtFilter"
+                ]
+                self.generateOptions.audLangs = jsonData["generateOptions"]["audLangs"]
+                self.generateOptions.subLangs = jsonData["generateOptions"]["subLangs"]
 
-        elif sourceMKV:
+        if sourceMKV:
             self.generateTemplate(
                 sourceMKV,
                 title=self.title,
                 outputFile=outputFile,
-                nightmode=nightmode,
-                sup2srt=sup2srt,
-                srtFilter=srtFilter,
+                nightmode=self.generateOptions.nightmode,
+                sup2srt=self.generateOptions.sup2srt,
+                srtFilter=self.generateOptions.srtFilter,
             )
+            self.filterLanguages(
+                self.generateOptions.audLangs, self.generateOptions.subLangs
+            )
+
+            # Once the generate command has been execuded we don't need
+            # the options anymore.
+            self.generateOptions = None
 
         for i in range(len(self.audioInfo)):
             audioTrack: AudioTrackInfo = self.audioInfo[i]
@@ -414,9 +465,12 @@ class Info:
         yield "title", self.title
         yield "sourceFile", self.sourceMKV
         yield "outputFile", self.outputFile
-        yield "video", dict(self.videoInfo)
+        if self.videoInfo:
+            yield "video", dict(self.videoInfo)
         yield "audio", audio
         yield "subs", subs
+        if self.generateOptions:
+            yield "generateOptions", dict(self.generateOptions)
 
     def __str__(self):
         return json.dumps(dict(self), indent=2)

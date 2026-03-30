@@ -102,6 +102,7 @@ name = "mcpainmkv"
 source = { editable = "." }
 dependencies = [
     { name = "ffmpeg-normalize" },
+    { name = "iso639-lang" },
     { name = "makemkv" },
     { name = "psutil" },
     { name = "rich" },
@@ -113,6 +114,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "ffmpeg-normalize", specifier = ">=1.37.3" },
+    { name = "iso639-lang", specifier = ">=2.6.3" },
     { name = "makemkv", specifier = ">=0.3.1" },
     { name = "psutil", specifier = ">=7.2.2" },
     { name = "rich", specifier = ">=14.3.2" },

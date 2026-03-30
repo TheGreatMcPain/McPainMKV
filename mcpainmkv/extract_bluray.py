@@ -1,205 +1,191 @@
 from pathlib import Path
 import makemkv
-import json
+from iso639 import is_language
+from mcpainmkv.info import Info, InfoGenerateOptions
 
 
-def extract_bluray(jsonFile: str, blurayDirs: list[str], outFile: str):
-    jsonFile = Path(jsonFile)
-    blurayInfoList = []
-
-    selection = "n"
-    if jsonFile.exists():
-        print(jsonFile, "found.")
-        selection = input("Resume with it? (y or n): ")
-
-    if selection == "y":
-        blurayInfoList = json.loads(jsonFile.read_text())
-        if type(blurayInfoList) is dict:
-            blurayInfoList = [blurayInfoList]
-
-        for blurayRoot in blurayDirs:
-            blurayPath = Path(blurayRoot)
-
-            if not isBluray(blurayPath):
-                print(blurayPath, "is not a BluRay Directory.")
-                return
-
-            if str(blurayPath) not in [x["blurayDir"] for x in blurayInfoList]:
-                selection = input(
-                    "Add {} to {}. (y or n): ".format(blurayPath, jsonFile)
-                )
-            if selection == "y":
-                blurayInfo = getBlurayInfo(blurayPath)
-                blurayInfoList.append(blurayInfo)
-                jsonFile.write_text(json.dumps(blurayInfoList))
-    else:
-        if len(blurayDirs) == 0:
-            print(
-                jsonFile.relative_to(Path.cwd()),
-                "not found!",
-                "Bluray directory required.",
-            )
-            return
-
-        for blurayRoot in blurayDirs:
-            blurayPath = Path(blurayRoot)
-
-            if not isBluray(blurayPath):
-                print(blurayPath, "is not a BluRay Directory.")
-                return
-
-            blurayInfo = getBlurayInfo(blurayPath)
-            blurayInfoList.append(blurayInfo)
-            jsonFile.write_text(json.dumps(blurayInfoList))
-
-    blurayInfoList = filterBlurayInfo(blurayInfoList)
-    for blurayInfo in blurayInfoList:
-        batchCreateMKVs(blurayInfo["blurayDir"], blurayInfo["titles"], outFile)
-
-
-def isBluray(blurayPath: Path) -> bool:
-    return blurayPath.joinpath("BDMV", "index.bdmv").exists()
-
-
-def filterBlurayInfo(blurayInfo: list) -> list[dict]:
-    newInfo = []
-    for root in blurayInfo:
-        blurayDir = Path(root["blurayDir"])
-        if not blurayDir.exists():
-            print(blurayDir, "doesn't exist! skipping...")
-            continue
-        if not isBluray(blurayDir):
-            print(blurayDir, "isn't a Bluray. skipping...")
-            continue
-
-        titles = []
-        for title in root["titles"]:
-            blurayFile = getBluRayFilePath(root["blurayDir"], title["filename"])
-            if not blurayFile.exists():
-                print(
-                    blurayFile,
-                    "doesn't exist! Bluray. skipping bluray...",
-                )
-                print("Bluray folder is either incomplete or incorrect.\n")
-                titles = []
-                break
-            titles.append(title)
-
-        if len(titles) > 0:
-            newInfo.append(root)
-
-    return newInfo
-
-
-def batchCreateMKVs(BluRayDir, titles, outFile):
+def printTitleInfo(title):
+    print("File:", title["source_filename"])
+    print("Length:", title["length"])
     counter = 0
-    disc = makemkv.MakeMKV(BluRayDir)
-    discInfo = disc.info()
-    for title in titles:
-        print()
-        print(counter, "out of", len(titles), "done")
-        output = ""
-        fileName = title["filename"]
-        inFile: Path = getBluRayFilePath(BluRayDir, fileName)
-        if not inFile.exists():
-            print("Oof!! Something must of broke!")
-            exit(1)
-        if "n" in title["main"]:
-            extrasPath = Path("extras")
-            if not extrasPath.is_dir():
-                extrasPath.mkdir()
-            output = extrasPath.joinpath(title["folder"])
-        else:
-            output = Path(title["folder"])
-        if not output.is_dir():
-            output.mkdir()
-
-        if output.joinpath(outFile).exists():
-            print(output, "exists!! skipping...")
-            continue
-        if output.glob("*.mkv"):
-            for x in output.glob("*.mkv"):
-                x.unlink()
-
-        with makemkv.ProgressParser() as progress:
-            mkvmaker = makemkv.MakeMKV(
-                BluRayDir, progress_handler=progress.parse_progress
+    for stream in title["streams"]:
+        if stream["type"] == "audio":
+            print(
+                "",
+                counter,
+                stream["type"],
+                stream["metadata_langcode"],
+                stream["codec_id"],
+                stream["downmix"],
+                stream["samplerate"],
+                stream["bitrate"],
             )
-            for title in discInfo["titles"]:
-                if fileName in title["source_filename"]:
-                    index = discInfo["titles"].index(title)
-                    mkvmaker.mkv(index, output)
-
-        for x in output.glob("*.mkv"):
-            x.rename(output.joinpath(outFile))
-
+        elif stream["type"] == "subtitles":
+            if "(forced only)" in stream["information"]:
+                counter -= 1
+            print(
+                "",
+                counter,
+                stream["type"],
+                stream["metadata_langcode"],
+                stream["codec_id"],
+                stream["information"],
+            )
+        else:
+            print(
+                "",
+                counter,
+                stream["type"],
+                stream["metadata_langcode"],
+                stream["codec_id"],
+                stream["dimensions"],
+                stream["aspect_ratio"],
+                stream["framerate"],
+                stream["information"],
+            )
         counter += 1
 
 
-def getBluRayFilePath(BluRayPath: Path, fileName: Path) -> Path:
-    BluRayPath = Path(BluRayPath)
-    fileName = Path(fileName)
-    """
-    Returns that full path of a m2ts/mpls file.
-    """
-    ext = fileName.suffix
-
-    filePath = BluRayPath.joinpath("BDMV")
-    if ".m2ts" in ext:
-        filePath = filePath.joinpath(filePath, Path("STREAM"), fileName)
-    if ".mpls" in ext:
-        filePath = filePath.joinpath(filePath, Path("PLAYLIST"), fileName)
-
-    return filePath
+def config_bluray(blurayDir: str, jsonFileName: str):
+    getBlurayInfo(blurayDir, jsonFileName)
 
 
-def titleExists(BluRayPath: Path, fileName: Path):
-    BluRayPath = Path(BluRayPath)
-    fileName = Path(fileName)
-    """
-    Checks if a file exists in the BluRay.
-    """
-    ext = fileName.suffix
-    if ext not in [".m2ts", ".mpls"]:
-        print(ext, "Is not a BluRay file extention.")
-        return False
+def extract_bluray(jsonFiles: list[str], outFile: str):
+    for jsonFile in jsonFiles:
+        jsonPath = Path(jsonFile).resolve()
+        info = Info(jsonPath)
+        disc = makemkv.MakeMKV(info.blurayPath)
+        discInfo = disc.info()
 
-    return getBluRayFilePath(BluRayPath, fileName).exists()
+        createMKV(
+            discInfo,
+            info.blurayPath,
+            info.blurayFile,
+            Path(jsonPath.parent, outFile),
+        )
+
+        jsonPath.write_text(
+            str(Info(jsonFile=jsonPath, sourceMKV=str(Path(jsonPath.parent, outFile))))
+        )
 
 
-def getBlurayInfo(BluRayPath: Path):
+def createMKV(discInfo, blurayDir, blurayFile, outFile):
+    if Path(outFile).exists():
+        return
+
+    outDir = Path(outFile).absolute().parent
+    if not Path(outDir).exists():
+        outDir.mkdir()
+
+    if outDir.glob("*.mkv"):
+        for x in outDir.glob("*.mkv"):
+            x.unlink()
+
+    with makemkv.ProgressParser() as progress:
+        mkvmaker = makemkv.MakeMKV(blurayDir, progress_handler=progress.parse_progress)
+        for title in discInfo["titles"]:
+            if blurayFile in title["source_filename"]:
+                index = discInfo["titles"].index(title)
+                mkvmaker.mkv(index, outDir)
+
+    for x in outDir.glob("*.mkv"):
+        x.rename(outDir.joinpath(outFile))
+
+
+def titleExists(discInfo, blurayFile: str):
+    for title in discInfo["titles"]:
+        if blurayFile == title["source_filename"]:
+            return True
+    return False
+
+
+def getTitleFromFile(discInfo, blurayFile):
+    for title in discInfo["titles"]:
+        if blurayFile == title["source_filename"]:
+            return title
+
+
+def getBlurayInfo(BluRayPath: Path, infoFileName: str):
     """
     Asks that user for information on a BluRay directory,
     and will export create a json file with the infomation.
     """
     blurayInfo = {}
     blurayInfo["blurayDir"] = str(BluRayPath)
-    titles = []
+
+    disc = makemkv.MakeMKV(BluRayPath)
+    discInfo = disc.info()
 
     print("BluRay Root:", BluRayPath)
     while True:
         print()
-        title = {}
         print("Type filename (Ex: 00800.mpls or 00510.m2ts) ", end="")
         fileName = input("(Type 'done' if finished): ")
         if "done" in fileName:
             break
-        if not titleExists(BluRayPath, Path(fileName)):
+        if not titleExists(discInfo, fileName):
             print(fileName, "does not exist.")
             continue
+
+        printTitleInfo(getTitleFromFile(discInfo, fileName))
+        audioLangs = []
+        while not audioLangs:
+            audioLangs = input(
+                "Please list what audio languages to keep (ex: eng,jpn): "
+            ).split(",")
+            for lang in audioLangs:
+                if not is_language(lang):
+                    print("Error", lang, "is not a language.")
+                    audioLangs = []
+                    break
+        subtitleLangs = []
+        while not subtitleLangs:
+            subtitleLangs = input(
+                "Please list what subtitle languages to keep (ex: eng,jpn): "
+            ).split(",")
+            for lang in subtitleLangs:
+                if not is_language(lang):
+                    print("Error", lang, "is not a language.")
+                    subtitleLangs = []
+                    break
+
+        nightmode = input(
+            "List audio track numbers to apply nightmodes to. (ex: 1,2): "
+        ).split(",")
+        sup2srt = input("List subtitle numbers to apply sup2srt to. (ex: 1,2): ").split(
+            ","
+        )
+        srtFilter = input(
+            "List subtitle numbers to apply srt-filter to. (ex: 1,2): "
+        ).split(",")
+
+        title = input("What's the title if this file?: ")
+        info = Info(
+            nightmode=[int(x) for x in nightmode],
+            sup2srt=[int(x) for x in sup2srt],
+            srtFilter=[int(x) for x in srtFilter],
+            audLangs=audioLangs,
+            subLangs=subtitleLangs,
+        )
+        info.blurayFile = fileName
+        info.blurayPath = BluRayPath
+        info.title = title
+        info.outputFile = title + ".mkv"
+
         extra = input("Is this an extra feature (y or n): ")
         while extra.lower() not in ["y", "n"]:
             print("Invalid input: must be 'y' or 'n'")
             extra = input("Is this an extra feature (y or n): ")
+
+        outputInfo = Path(infoFileName)
         if "y" in extra.lower():
-            title["main"] = "no"
             folder = input("Type the folder name for this title: ")
-            title["folder"] = folder
+            outputInfo = Path("extras", folder).joinpath(outputInfo)
+            if not Path("extras", folder).exists():
+                Path("extras", folder).mkdir()
         else:
-            title["main"] = "yes"
             folder = input("Type the folder name for this title: ")
-            title["folder"] = folder
-        title["filename"] = str(fileName)
-        titles.append(title)
-    blurayInfo["titles"] = titles
-    return blurayInfo
+            outputInfo = Path(folder).joinpath(outputInfo)
+            if not Path(folder).exists():
+                Path(folder).mkdir()
+        outputInfo.write_text(str(info))

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import mcpainmkv.extract_bluray
 import argparse
 import importlib.util
 import os
@@ -188,20 +189,20 @@ def main():
     parser_extract_bluray.add_argument(
         "--bluray-directory",
         "-d",
-        dest="blurayDirs",
-        action="extend",
-        nargs="+",
+        dest="blurayDir",
         help="Path to Bluray file structure.",
         type=str,
-        default=[],
+        default="",
     )
     parser_extract_bluray.add_argument(
-        "--config-file",
+        "--config-files",
         "-c",
-        dest="blurayJson",
-        help="Path to '.json' config file.",
+        dest="configFiles",
+        action="extend",
+        nargs="+",
+        help="Path to '.json' files.",
         type=str,
-        default="extract_bluray.json",
+        default=[],
     )
     parser_extract_bluray.add_argument(
         "--output-filename",
@@ -274,8 +275,9 @@ def main():
             nightmode=args.configNightMode,
             sup2srt=args.configSup2Srt,
             srtFilter=args.configSrtFilter,
+            audLangs=audLangs,
+            subLangs=subLangs,
         )
-        outConfig.filterLanguages(audLangs=audLangs, subLangs=subLangs)
 
         outConfig.videoInfo.vapoursynthScript = args.vapoursynth
 
@@ -288,7 +290,10 @@ def main():
         return
 
     if "extract_bluray" in args.command:
-        extract_bluray(args.blurayJson, args.blurayDirs, args.outFile)
+        if args.blurayDir:
+            mcpainmkv.extract_bluray.config_bluray(args.blurayDir, "info.json")
+        if args.configFiles:
+            extract_bluray(args.configFiles, args.outFile)
 
 
 def beGentlePlz():
