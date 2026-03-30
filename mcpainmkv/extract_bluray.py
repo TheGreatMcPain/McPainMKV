@@ -152,24 +152,18 @@ def getBlurayInfo(BluRayPath: Path, infoFileName: str):
         nightmode = input(
             "List audio track numbers to apply nightmodes to. (ex: 1,2): "
         ).split(",")
-        if not nightmode:
-            nightmode = []
         sup2srt = input("List subtitle numbers to apply sup2srt to. (ex: 1,2): ").split(
             ","
         )
-        if not sup2srt:
-            sup2srt = []
         srtFilter = input(
             "List subtitle numbers to apply srt-filter to. (ex: 1,2): "
         ).split(",")
-        if not srtFilter:
-            srtFilter = []
 
         title = input("What's the title if this file?: ")
         info = Info(
-            nightmode=[int(x) for x in nightmode],
-            sup2srt=[int(x) for x in sup2srt],
-            srtFilter=[int(x) for x in srtFilter],
+            nightmode=[int(x) for x in nightmode if x.isdigit()],
+            sup2srt=[int(x) for x in sup2srt if x.isdigit()],
+            srtFilter=[int(x) for x in srtFilter if x.isdigit()],
             audLangs=audioLangs,
             subLangs=subtitleLangs,
         )
