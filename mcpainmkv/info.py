@@ -409,15 +409,26 @@ class Info:
                             trackInfo.external = track["external"]
                     self.subInfo.append(trackInfo)
             if "generateOptions" in jsonData:
-                self.generateOptions.nightmode = jsonData["generateOptions"][
-                    "nightmode"
-                ]
-                self.generateOptions.sup2srt = jsonData["generateOptions"]["sup2srt"]
-                self.generateOptions.srtFilter = jsonData["generateOptions"][
-                    "srtFilter"
-                ]
-                self.generateOptions.audLangs = jsonData["generateOptions"]["audLangs"]
-                self.generateOptions.subLangs = jsonData["generateOptions"]["subLangs"]
+                if "nightmode" in jsonData["generateOptions"]:
+                    self.generateOptions.nightmode = jsonData["generateOptions"][
+                        "nightmode"
+                    ]
+                if "sup2srt" in jsonData["generateOptions"]:
+                    self.generateOptions.sup2srt = jsonData["generateOptions"][
+                        "sup2srt"
+                    ]
+                if "srtFilter" in jsonData["generateOptions"]:
+                    self.generateOptions.srtFilter = jsonData["generateOptions"][
+                        "srtFilter"
+                    ]
+                if "audLangs" in jsonData["generateOptions"]:
+                    self.generateOptions.audLangs = jsonData["generateOptions"][
+                        "audLangs"
+                    ]
+                if "subLangs" in jsonData["generateOptions"]:
+                    self.generateOptions.subLangs = jsonData["generateOptions"][
+                        "subLangs"
+                    ]
 
         if sourceMKV:
             self.generateTemplate(
