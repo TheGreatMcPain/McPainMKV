@@ -4,6 +4,7 @@ import threading
 import xml.etree.cElementTree as ET
 import importlib
 import os
+import threading
 
 from pathlib import Path
 from ffmpeg_normalize import FFmpegNormalize
@@ -440,7 +441,7 @@ def convertSubtitles(info: Info):
             subtitlesFilter(track.getOutFile())
 
 
-def ffmpegRun(cmd):
+def ffmpegRun(cmd, quiet=True):
     print(" ".join(cmd))
     p = sp.Popen(cmd, stderr=sp.STDOUT, stdout=sp.PIPE, universal_newlines=True)
     if not p.stdout:
@@ -448,8 +449,10 @@ def ffmpegRun(cmd):
     for line in p.stdout:
         line = line.rstrip()
         if "size=" in line:
-            print(f"{line}\r", end="")
-    print()
+            if not quiet:
+                print(f"{line}\r", end="")
+    if not quiet:
+        print()
 
 
 def getffFilter(surVol: float, lfeVol: float, centerVol: float):
@@ -480,7 +483,7 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
     ffmpeg_normalize = FFmpegNormalize(
         audio_codec=audioTrack.convert["codec"],
         extra_output_options=encodeOpts,
-        progress=True,
+        progress=False,
         auto_lower_loudness_target=True,
     )
 
@@ -516,6 +519,8 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
                 ffmpeg_normalize.target_level = ffFilter["normalize"]["target_level"]
                 if "true_peak" in ffFilter["normalize"]:
                     ffmpeg_normalize.true_peak = ffFilter["normalize"]["true_peak"]
+                else:
+                    ffmpeg_normalize.true_peak = 0.0
 
     if normalize:
         ffmpeg_normalize.post_filter = ",".join(Filter)
@@ -562,9 +567,18 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
 
 
 def convertAudio(info: Info):
+    threads = []
     for track in info.audioInfo:
         if track.convert:
-            convertAudioTrack(info.sourceMKV, track)
+            t = threading.Thread(target=convertAudioTrack, args=(info.sourceMKV, track))
+            threads.append(t)
+
+    for t in threads:
+        print("Starting job {} out of {}".format(t.ident, len(threads)))
+        t.start()
+
+    for t in threads:
+        t.join()
 
 
 def extractTracks(info: Info):
