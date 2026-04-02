@@ -1,3 +1,4 @@
+import ffmpeg_normalize
 import subprocess as sp
 import shutil
 import threading
@@ -483,8 +484,12 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
     ffmpeg_normalize = FFmpegNormalize(
         audio_codec=audioTrack.convert["codec"],
         extra_output_options=encodeOpts,
-        progress=False,
+        progress=True,
         auto_lower_loudness_target=True,
+        video_disable=True,
+        subtitle_disable=True,
+        metadata_disable=True,
+        chapters_disable=True,
     )
 
     if Path(audioTrack.getOutFile()).exists():
@@ -523,32 +528,12 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
                     ffmpeg_normalize.true_peak = 0.0
 
     if normalize:
-        ffmpeg_normalize.post_filter = ",".join(Filter)
-        normTemp = Path(str(audioTrack.id) + ".norm.flac")
         print("'normalize' enabled!")
-        if not normTemp.exists():
-            # Creating a flac file, because it'll go faster than reading from the source.
-            # Plus, 'ffmpeg-normalize' doesn't have an option to just output one audio track.
-            print("Creating intermediate 'flac' file.")
-            normTempTemp = Path(normTemp).with_suffix(".temp.flac")
-            ffmpegRun(
-                [
-                    "ffmpeg",
-                    "-y",
-                    "-i",
-                    sourceFile,
-                    "-map",
-                    "0:{}".format(audioTrack.id),
-                    "-acodec",
-                    "flac",
-                    str(normTempTemp),
-                ],
-            )
-            normTempTemp.replace(normTemp)
-        else:
-            print("Intermediate 'flac' file already exists.")
         print("Normalizing and converting audio using 'ffmpeg-normalize'")
-        ffmpeg_normalize.add_media_file(str(normTemp), str(tempOutFile))
+        ffmpeg_normalize.post_filter = ",".join(Filter)
+        ffmpeg_normalize.audio_streams = [audioTrack.id]
+        ffmpeg_normalize.extension = audioTrack.extension
+        ffmpeg_normalize.add_media_file(str(sourceFile), str(tempOutFile))
         ffmpeg_normalize.run_normalization()
     else:
         cmd = ["ffmpeg", "-y", "-i", sourceFile]
