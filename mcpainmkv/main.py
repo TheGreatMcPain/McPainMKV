@@ -9,7 +9,7 @@ import importlib
 
 from mcpainmkv.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
 from mcpainmkv.convert import convertMKV
-from mcpainmkv.extract_bluray import extract_bluray
+from mcpainmkv.extract_bluray import extractBluray
 
 # BDSup2Sub Settings #
 # Use java version
@@ -291,9 +291,23 @@ def main():
 
     if "extract_bluray" in args.command:
         if args.blurayDir:
-            mcpainmkv.extract_bluray.config_bluray(args.blurayDir, "info.json")
+            bluray = extractBluray(args.blurayDir)
+            bluray.getBlurayInfo("info.json")
         if args.configFiles:
-            extract_bluray(args.configFiles, args.outFile)
+            for config in args.configFiles:
+                configPath = Path(config).resolve()
+                info = Info(configPath)
+                bluray = extractBluray(config)
+                bluray.createMKV(info.blurayFile, "source.mkv")
+
+                configPath.write_text(
+                    str(
+                        Info(
+                            jsonFile=configPath,
+                            sourceMKV=str(Path(configPath.parent, "source.mkv")),
+                        )
+                    )
+                )
 
 
 def beGentlePlz():
