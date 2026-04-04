@@ -291,9 +291,10 @@ def main():
 
     if "extract_bluray" in args.command:
         if args.blurayDir:
-            bluray = extractBluray(args.blurayDir)
+            bluray = extractBluray(blurayPath=args.blurayDir)
             bluray.getBlurayInfo("info.json")
         if args.configFiles:
+            print(args.configFiles)
             for config in args.configFiles:
                 configPath = Path(config).resolve()
                 info = Info(configPath)
