@@ -129,7 +129,7 @@ class extractBluray:
                 x for x in self.discInfo["titles"] if input == x["source_filename"]
             )
 
-        if input.isdigit() and input in range(len(self.discInfo["titles"])):
+        if input.isdigit() and int(input) in range(len(self.discInfo["titles"])):
             return self.discInfo["titles"][int(input)]
 
         return None
