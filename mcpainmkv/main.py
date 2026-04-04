@@ -304,7 +304,7 @@ def main():
                     str(
                         Info(
                             jsonFile=configPath,
-                            sourceMKV=str(Path(configPath.parent, "source.mkv")),
+                            sourceMKV="source.mkv",
                         )
                     )
                 )
