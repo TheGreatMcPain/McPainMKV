@@ -300,14 +300,15 @@ def main():
                 bluray = extractBluray(info.blurayPath)
                 bluray.createMKV(info.blurayFile, Path(configPath.parent, "source.mkv"))
 
-                configPath.write_text(
-                    str(
-                        Info(
-                            jsonFile=configPath,
-                            sourceMKV="source.mkv",
+                if info.generateTemplate:
+                    configPath.write_text(
+                        str(
+                            Info(
+                                jsonFile=configPath,
+                                sourceMKV="source.mkv",
+                            )
                         )
                     )
-                )
 
 
 def beGentlePlz():
