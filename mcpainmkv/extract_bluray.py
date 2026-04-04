@@ -25,10 +25,13 @@ class extractBluray:
             mkvmaker = makemkv.MakeMKV(
                 self.blurayPath, progress_handler=progress.parse_progress
             )
-            for title in self.discInfo["titles"]:
-                if blurayFile in title["source_filename"]:
-                    index = self.discInfo["titles"].index(title)
-                    mkvmaker.mkv(index, outDir)
+            blurayTitle = self.selectTitle(blurayFile)
+            if not blurayTitle:
+                print("Bluray title, or file doesn't exist!:", blurayFile)
+                return
+
+            index = self.discInfo["titles"].index(blurayTitle)
+            mkvmaker.mkv(index, outDir)
 
         for x in outDir.glob("*.mkv"):
             x.rename(outDir.joinpath(outFile))
@@ -42,21 +45,20 @@ class extractBluray:
         print("BluRay Root:", self.blurayPath)
         while True:
             print()
-            print("Type filename (Ex: 00800.mpls or 00510.m2ts) ", end="")
+            print(
+                "Type filename or title number (Ex: 00800.mpls or 00510.m2ts or 1) ",
+                end="",
+            )
             fileName = input("(Type 'done' if finished): ")
             if "done" in fileName:
                 break
-            if fileName not in [x["source_filename"] for x in self.discInfo["titles"]]:
-                print(fileName, "does not exist.")
+
+            blurayTitle = self.selectTitle(fileName)
+            if not blurayTitle:
+                print(blurayTitle, "does not exist.")
                 continue
 
-            self.printTitleInfo(
-                next(
-                    x
-                    for x in self.discInfo["titles"]
-                    if fileName == x["source_filename"]
-                )
-            )
+            self.printTitleInfo(blurayTitle)
 
             audioLangs = []
             while not audioLangs:
@@ -119,6 +121,18 @@ class extractBluray:
                 if not Path(folder).exists():
                     Path(folder).mkdir()
             outputInfo.write_text(str(info))
+
+    # input can be a filename ".m2ts, .mpls" or a title number based on MakeMKV's output.
+    def selectTitle(self, input: str):
+        if ".mpls" in input or ".m2ts" in input:
+            return next(
+                x for x in self.discInfo["titles"] if input == x["source_filename"]
+            )
+
+        if input.isdigit() and input in range(len(self.discInfo["titles"])):
+            return self.discInfo["titles"][int(input)]
+
+        return None
 
     def printTitleInfo(self, title):
         print("File:", title["source_filename"])
