@@ -5,14 +5,9 @@ from mcpainmkv.info import Info
 
 
 class extractBluray:
-    def __init__(self, jsonFile: str, blurayPath: str = ""):
-        if blurayPath:
-            self.blurayPath = blurayPath
-        if jsonFile:
-            info = Info(jsonFile)
-            self.blurayPath = info.blurayPath
+    def __init__(self, blurayPath: str):
+        self.blurayPath = blurayPath
         self.discInfo = makemkv.MakeMKV(self.blurayPath).info()
-        return
 
     def createMKV(self, blurayFile, outFile):
         if Path(outFile).exists():
@@ -51,7 +46,7 @@ class extractBluray:
             fileName = input("(Type 'done' if finished): ")
             if "done" in fileName:
                 break
-            if fileName in [x["source_filename"] for x in self.discInfo["titles"]]:
+            if fileName not in [x["source_filename"] for x in self.discInfo["titles"]]:
                 print(fileName, "does not exist.")
                 continue
 
