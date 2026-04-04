@@ -89,7 +89,7 @@ class extractBluray:
                 "List subtitle numbers to apply srt-filter to. (ex: 1,2): "
             ).split(",")
 
-            title = input("What's the title if this file?: ")
+            title = input("What's the title of this file?: ")
             info = Info(
                 nightmode=[int(x) for x in nightmode if x.isdigit()],
                 sup2srt=[int(x) for x in sup2srt if x.isdigit()],
@@ -98,7 +98,7 @@ class extractBluray:
                 subLangs=subtitleLangs,
             )
             info.blurayFile = fileName
-            info.blurayPath = self.BluRayPath
+            info.blurayPath = self.blurayPath
             info.title = title
             info.outputFile = title + ".mkv"
 
@@ -125,38 +125,11 @@ class extractBluray:
         print("Length:", title["length"])
         counter = 0
         for stream in title["streams"]:
-            if stream["type"] == "audio":
-                print(
-                    "",
-                    counter,
-                    stream["type"],
-                    stream["metadata_langcode"],
-                    stream["codec_id"],
-                    stream["downmix"],
-                    stream["samplerate"],
-                    stream["bitrate"],
-                )
-            elif stream["type"] == "subtitles":
-                if "(forced only)" in stream["information"]:
-                    counter -= 1
-                print(
-                    "",
-                    counter,
-                    stream["type"],
-                    stream["metadata_langcode"],
-                    stream["codec_id"],
-                    stream["information"],
-                )
-            else:
-                print(
-                    "",
-                    counter,
-                    stream["type"],
-                    stream["metadata_langcode"],
-                    stream["codec_id"],
-                    stream["dimensions"],
-                    stream["aspect_ratio"],
-                    stream["framerate"],
-                    stream["information"],
-                )
+            print("", counter, end=" ")
+            if stream["type"] == "subtitles":
+                counter -= 1
+            for key in stream.keys():
+                print(stream[key], end=" ")
+            print()
+
             counter += 1
