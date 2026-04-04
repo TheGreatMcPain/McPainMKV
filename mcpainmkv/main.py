@@ -298,7 +298,7 @@ def main():
                 configPath = Path(config).resolve()
                 info = Info(configPath)
                 bluray = extractBluray(info.blurayPath)
-                bluray.createMKV(info.blurayFile, "source.mkv")
+                bluray.createMKV(info.blurayFile, Path(configPath.parent, "source.mkv"))
 
                 configPath.write_text(
                     str(
