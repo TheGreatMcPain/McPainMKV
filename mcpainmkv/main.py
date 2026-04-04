@@ -305,7 +305,7 @@ def main():
                         str(
                             Info(
                                 jsonFile=configPath,
-                                sourceMKV="source.mkv",
+                                sourceMKV=str(Path(configPath.parent, "source.mkv")),
                             )
                         )
                     )
@@ -352,7 +352,7 @@ def cleanFiles(folders: list, infoFile: str):
                 print("Deleting", file)
                 file.unlink()
 
-        exclude.remove(info.sourceMKV)
+        # exclude.remove(info.sourceMKV)
 
 
 def selectKeyFromDict(d: dict):
