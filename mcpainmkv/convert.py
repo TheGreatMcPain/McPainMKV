@@ -196,7 +196,7 @@ def encodeVideo(info: Info):
             exit(1)
         print("Using 'vapoursynthFilter()' from '{}'".format(vapoursynthScriptPath))
     else:
-        video = core.ffms2.Source(info.sourceMKV)
+        video = core.bs.VideoSource(info.sourceMKV, hwdevice="vulkan")
 
     encodeProcess = None
 
