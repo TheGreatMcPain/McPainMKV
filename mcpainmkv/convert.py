@@ -1,14 +1,14 @@
-import ffmpeg_normalize
 import subprocess as sp
 import shutil
 import threading
 import xml.etree.cElementTree as ET
 import importlib
 import os
-import threading
+from ffmpeg_progress_yield import FfmpegProgress
+from rich.progress import Progress, TaskID
+from rich import print
 
 from pathlib import Path
-from ffmpeg_normalize import FFmpegNormalize
 from subtitle_filter import Subtitles
 from mcpainmkv.info import Info, SubtitleTrackInfo, AudioTrackInfo
 from mcpainmkv.videoinfo import videoInfo
@@ -185,11 +185,7 @@ def encodeVideo(info: Info):
                 vsScriptVars = info.videoInfo.vapoursynthVars
             video = vapoursynthScript.vapoursynthFilter(info.sourceMKV, vsScriptVars)
         else:
-            print(
-                "'vapoursynthFilter()' Doesn't exist in {}".format(
-                    vapoursynthScriptPath
-                )
-            )
+            print("'vapoursynthFilter()' Doesn't exist in {}".format(vapoursynthScriptPath))
             exit(1)
         if type(video) is not VideoNode:
             print("'vapoursynthFilter()' did not return VideoNode.")
@@ -471,8 +467,9 @@ def getffFilter(surVol: float, lfeVol: float, centerVol: float):
     return "pan=stereo|{}|{}".format(ffPanFilterL, ffPanFilterR)
 
 
-def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
-    normalize: bool = False
+def convertAudioTrack(
+    progress: Progress, worker: TaskID, sourceFile: str, audioTrack: AudioTrackInfo
+):
     encodeOpts = None
     tempOutFile = Path("temp-" + audioTrack.getOutFile())
     Filter: list = []
@@ -480,17 +477,6 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
     if "encodeOpts" in audioTrack.convert:
         if audioTrack.convert["encodeOpts"]:
             encodeOpts = audioTrack.convert["encodeOpts"]
-
-    ffmpeg_normalize = FFmpegNormalize(
-        audio_codec=audioTrack.convert["codec"],
-        extra_output_options=encodeOpts,
-        progress=True,
-        auto_lower_loudness_target=True,
-        video_disable=True,
-        subtitle_disable=True,
-        metadata_disable=True,
-        chapters_disable=True,
-    )
 
     if Path(audioTrack.getOutFile()).exists():
         print(audioTrack.getOutFile(), "already exists! skipping...")
@@ -511,59 +497,40 @@ def convertAudioTrack(sourceFile: str, audioTrack: AudioTrackInfo):
                     )
                 )
 
-            if "normalize" in ffFilter.keys():
-                normalize = True
-                ffmpeg_normalize.pre_filter = ",".join(Filter)
-                Filter = []
-                if "keep" == ffFilter["normalize"]["loudness_range_target"]:
-                    ffmpeg_normalize.keep_lra_above_loudness_range_target = True
-                else:
-                    ffmpeg_normalize.loudness_range_target = ffFilter["normalize"][
-                        "loudness_range_target"
-                    ]
-                ffmpeg_normalize.target_level = ffFilter["normalize"]["target_level"]
-                if "true_peak" in ffFilter["normalize"]:
-                    ffmpeg_normalize.true_peak = ffFilter["normalize"]["true_peak"]
-                else:
-                    ffmpeg_normalize.true_peak = 0.0
+    cmd = ["ffmpeg", "-y", "-i", sourceFile]
+    cmd += ["-map", "0:{}".format(audioTrack.id)]
+    cmd += ["-c:a", audioTrack.convert["codec"]]
+    if encodeOpts:
+        cmd += encodeOpts
+    if len(Filter) > 0:
+        cmd += ["-af", ",".join(Filter)]
+    cmd += [str(tempOutFile)]
 
-    if normalize:
-        print("'normalize' enabled!")
-        print("Normalizing and converting audio using 'ffmpeg-normalize'")
-        ffmpeg_normalize.post_filter = ",".join(Filter)
-        ffmpeg_normalize.audio_streams = [audioTrack.id]
-        ffmpeg_normalize.extension = audioTrack.extension
-        ffmpeg_normalize.add_media_file(str(sourceFile), str(tempOutFile))
-        ffmpeg_normalize.run_normalization()
-    else:
-        cmd = ["ffmpeg", "-y", "-i", sourceFile]
-        cmd += ["-map", "0:{}".format(audioTrack.id)]
-        cmd += ["-c:a", audioTrack.convert["codec"]]
-        if encodeOpts:
-            cmd += encodeOpts
-        if len(Filter) > 0:
-            cmd += ["-af", ",".join(Filter)]
-        cmd += [str(tempOutFile)]
-
-        print("Converting Audio via ffmpeg")
-        ffmpegRun(cmd)
+    with FfmpegProgress(cmd) as ff:
+        for ff_progress in ff.run_command_with_progress():
+            progress.update(worker, completed=ff_progress)
 
     tempOutFile.replace(audioTrack.getOutFile())
 
 
 def convertAudio(info: Info):
+    progress = Progress()
+
     threads = []
-    for track in info.audioInfo:
-        if track.convert:
-            t = threading.Thread(target=convertAudioTrack, args=(info.sourceMKV, track))
-            threads.append(t)
+    with progress:
+        for track in info.audioInfo:
+            if track.convert:
+                worker = progress.add_task("[magenta]{}".format(track.getOutFile()), total=100)
+                t = threading.Thread(
+                    target=convertAudioTrack, args=(progress, worker, info.sourceMKV, track)
+                )
+                threads.append(t)
 
-    for t in threads:
-        print("Starting job {} out of {}".format(t.ident, len(threads)))
-        t.start()
+        for t in threads:
+            t.start()
 
-    for t in threads:
-        t.join()
+        for t in threads:
+            t.join()
 
 
 def extractTracks(info: Info):
