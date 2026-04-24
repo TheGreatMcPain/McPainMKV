@@ -57,9 +57,7 @@ class SubtitleTrackInfo(TrackInfo):
 
         if self.sup2srt and self.extension not in "srt":
             print(
-                "Warning for '{}': 'sup2srt' set, but 'extension' is not '.srt'".format(
-                    self.title
-                )
+                "Warning for '{}': 'sup2srt' set, but 'extension' is not '.srt'".format(self.title)
             )
             if self.srtFilter:
                 print(
@@ -155,16 +153,9 @@ class AudioTrackInfo(TrackInfo):
         downmixCenter: float = 2.0,
         downmixLFE: float = 0.0,
         downmixSurrounds: float = 0.707,
-        dynaudnorm: bool = False,
+        ffFilter: str = "",
     ) -> Self:
         result = copy.deepcopy(self)
-        dynAudNorm = {"ffmpeg": "dynaudnorm=compress=27.0:gausssize=53"}
-        normalize = {
-            "normalize": {
-                "loudness_range_target": "keep",
-                "target_level": -23,
-            }
-        }
         downmixStereo = {
             "downmixStereo": {
                 "center": downmixCenter,
@@ -176,10 +167,9 @@ class AudioTrackInfo(TrackInfo):
         result.extension = "m4a"
         result.convert = {"codec": "aac", "encodeOpts": ["-b:a", "256K"]}
         result.convert["filters"] = []
-        if dynaudnorm:
-            result.convert["filters"].append(dynAudNorm)
+        if ffFilter:
+            result.convert["filters"].append({"ffmpeg": ffFilter})
         result.convert["filters"].append(downmixStereo)
-        result.convert["filters"].append(normalize)
         result.default = False
 
         return result
@@ -410,25 +400,15 @@ class Info:
                     self.subInfo.append(trackInfo)
             if "generateOptions" in jsonData:
                 if "nightmode" in jsonData["generateOptions"]:
-                    self.generateOptions.nightmode = jsonData["generateOptions"][
-                        "nightmode"
-                    ]
+                    self.generateOptions.nightmode = jsonData["generateOptions"]["nightmode"]
                 if "sup2srt" in jsonData["generateOptions"]:
-                    self.generateOptions.sup2srt = jsonData["generateOptions"][
-                        "sup2srt"
-                    ]
+                    self.generateOptions.sup2srt = jsonData["generateOptions"]["sup2srt"]
                 if "srtFilter" in jsonData["generateOptions"]:
-                    self.generateOptions.srtFilter = jsonData["generateOptions"][
-                        "srtFilter"
-                    ]
+                    self.generateOptions.srtFilter = jsonData["generateOptions"]["srtFilter"]
                 if "audLangs" in jsonData["generateOptions"]:
-                    self.generateOptions.audLangs = jsonData["generateOptions"][
-                        "audLangs"
-                    ]
+                    self.generateOptions.audLangs = jsonData["generateOptions"]["audLangs"]
                 if "subLangs" in jsonData["generateOptions"]:
-                    self.generateOptions.subLangs = jsonData["generateOptions"][
-                        "subLangs"
-                    ]
+                    self.generateOptions.subLangs = jsonData["generateOptions"]["subLangs"]
 
         if sourceMKV:
             self.generateTemplate(
@@ -439,9 +419,7 @@ class Info:
                 sup2srt=self.generateOptions.sup2srt,
                 srtFilter=self.generateOptions.srtFilter,
             )
-            self.filterLanguages(
-                self.generateOptions.audLangs, self.generateOptions.subLangs
-            )
+            self.filterLanguages(self.generateOptions.audLangs, self.generateOptions.subLangs)
 
             # Once the generate command has been execuded we don't need
             # the options anymore.
@@ -539,16 +517,15 @@ class Info:
                             downmixCenter=2.0,
                             downmixLFE=0.707,
                             downmixSurrounds=0.707,
-                            dynaudnorm=False,
                         )
                     )
                     self.audioInfo.append(
                         template.nightmodeTemplate(
-                            "Stereo 'dynaudnorm,downmix'",
+                            "Stereo 'dynaudnorm-nondefault,downmix-nolfe'",
                             downmixCenter=2.0,
-                            downmixLFE=0.707,
+                            downmixLFE=0.0,
                             downmixSurrounds=0.707,
-                            dynaudnorm=True,
+                            ffFilter="dynaudnorm=compress=27.0:gausssize=53",
                         )
                     )
                     self.audioInfo.append(
@@ -557,17 +534,14 @@ class Info:
                             downmixCenter=2.0,
                             downmixLFE=0.0,
                             downmixSurrounds=0.707,
-                            dynaudnorm=True,
+                            ffFilter="dynaudnorm",
                         )
                     )
         for i in range(len(ffprobeInfo["streams"])):
             template = self.getSubtitleTemplate(ffprobeInfo, i)
             if template:
                 streamInfo = ffprobeInfo["streams"][i]
-                if (
-                    streamInfo["codec_name"].lower() not in "hdmv_pgs_subtitle"
-                    or i in sup2srt
-                ):
+                if streamInfo["codec_name"].lower() not in "hdmv_pgs_subtitle" or i in sup2srt:
                     if i in srtFilter:
                         filterSrt = copy.deepcopy(template)
                         filterSrt.extension = "srt"
@@ -580,9 +554,7 @@ class Info:
                         self.subInfo.append(filterSrt)
                         template.hearingImpaired = True
                         template.title = " ".join(
-                            template.title.split(" ")[:1]
-                            + ["SDH"]
-                            + template.title.split(" ")[1:]
+                            template.title.split(" ")[:1] + ["SDH"] + template.title.split(" ")[1:]
                         )
                     if i in sup2srt:
                         tempSrt = copy.deepcopy(template)
@@ -747,9 +719,7 @@ class Info:
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(
-        prog="info", description="Batchconvert info.json generator"
-    )
+    parser = argparse.ArgumentParser(prog="info", description="Batchconvert info.json generator")
     parser.add_argument("sourceFile")
     parser.add_argument("--nightmode", action=argparse.BooleanOptionalAction)
     parser.add_argument(
