@@ -49,9 +49,7 @@ def main():
         help="Delete source files.",
     )
 
-    parser_config = subparser.add_parser(
-        "config", help="Generate 'info.json' configuration."
-    )
+    parser_config = subparser.add_parser("config", help="Generate 'info.json' configuration.")
     parser_config.add_argument(
         "--input",
         "-i",
@@ -368,9 +366,7 @@ def selectKeyFromDict(d: dict):
             result = keys[selection]
             break
         else:
-            selection = int(
-                input("Invalid input! (between 0 and {}):".format(len(keys) - 1))
-            )
+            selection = int(input("Invalid input! (between 0 and {}):".format(len(keys) - 1)))
 
     return result
 

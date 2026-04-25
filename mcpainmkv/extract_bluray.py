@@ -22,9 +22,7 @@ class extractBluray:
                 x.unlink()
 
         with makemkv.ProgressParser() as progress:
-            mkvmaker = makemkv.MakeMKV(
-                self.blurayPath, progress_handler=progress.parse_progress
-            )
+            mkvmaker = makemkv.MakeMKV(self.blurayPath, progress_handler=progress.parse_progress)
             blurayTitle = self.selectTitle(blurayFile)
             if not blurayTitle:
                 print("Bluray title, or file doesn't exist!:", blurayFile)
@@ -81,15 +79,13 @@ class extractBluray:
                         subtitleLangs = []
                         break
 
-            nightmode = input(
-                "List audio track numbers to apply nightmodes to. (ex: 1,2): "
-            ).split(",")
-            sup2srt = input(
-                "List subtitle numbers to apply sup2srt to. (ex: 1,2): "
-            ).split(",")
-            srtFilter = input(
-                "List subtitle numbers to apply srt-filter to. (ex: 1,2): "
-            ).split(",")
+            nightmode = input("List audio track numbers to apply nightmodes to. (ex: 1,2): ").split(
+                ","
+            )
+            sup2srt = input("List subtitle numbers to apply sup2srt to. (ex: 1,2): ").split(",")
+            srtFilter = input("List subtitle numbers to apply srt-filter to. (ex: 1,2): ").split(
+                ","
+            )
 
             title = input("What's the title of this file?: ")
             info = Info(
@@ -125,9 +121,7 @@ class extractBluray:
     # input can be a filename ".m2ts, .mpls" or a title number based on MakeMKV's output.
     def selectTitle(self, input: str):
         if ".mpls" in input or ".m2ts" in input:
-            return next(
-                x for x in self.discInfo["titles"] if input == x["source_filename"]
-            )
+            return next(x for x in self.discInfo["titles"] if input == x["source_filename"])
 
         if input.isdigit() and int(input) in range(len(self.discInfo["titles"])):
             return self.discInfo["titles"][int(input)]

@@ -112,9 +112,7 @@ class videoInfo:
 
                 self.HDR10MasterDisplayData = self.__getMasterDisplayData(sideDataList)
                 self.X265HDR10MasterDisplayString = self.__getX265MasterDisplayString()
-                self.HDR10ContentLightLeveData = self.__getContentLightLeveData(
-                    sideDataList
-                )
+                self.HDR10ContentLightLeveData = self.__getContentLightLeveData(sideDataList)
                 self.X265HDR10CLLString = self.__getX265CLLString()
                 if self.HDR10MasterDisplayData:
                     self.HDR10 = True
@@ -247,19 +245,13 @@ class videoInfo:
 
     def __getContentLightLeveData(self, sideDataList):
         for sideData in sideDataList:
-            if (
-                sideData["side_data_type"].lower()
-                == "Content light level metadata".lower()
-            ):
+            if sideData["side_data_type"].lower() == "Content light level metadata".lower():
                 if len(sideData) > 1:
                     return sideData
 
     def __getMasterDisplayData(self, sideDataList):
         for sideData in sideDataList:
-            if (
-                sideData["side_data_type"].lower()
-                == "Mastering display metadata".lower()
-            ):
+            if sideData["side_data_type"].lower() == "Mastering display metadata".lower():
                 if len(sideData) > 1:
                     return sideData
 
@@ -274,36 +266,20 @@ class videoInfo:
             return None
 
         masterDisplayString = "G({},{})".format(
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["green_x"], 50000
-            ),
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["green_y"], 50000
-            ),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["green_x"], 50000),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["green_y"], 50000),
         )
         masterDisplayString += "B({},{})".format(
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["blue_x"], 50000
-            ),
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["blue_y"], 50000
-            ),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["blue_x"], 50000),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["blue_y"], 50000),
         )
         masterDisplayString += "R({},{})".format(
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["red_x"], 50000
-            ),
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["red_y"], 50000
-            ),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["red_x"], 50000),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["red_y"], 50000),
         )
         masterDisplayString += "WP({},{})".format(
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["white_point_x"], 50000
-            ),
-            self.__getMasterDisplayColorValue(
-                self.HDR10MasterDisplayData["white_point_y"], 50000
-            ),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["white_point_x"], 50000),
+            self.__getMasterDisplayColorValue(self.HDR10MasterDisplayData["white_point_y"], 50000),
         )
         # I guess some x265 encoded files don't include these values.
         # I'm guessing "L(10000000,1)" is the default.
@@ -335,14 +311,9 @@ class videoInfo:
         return CLLString
 
     def __isDolbyVision(self, sideDataList, streamData) -> None | int:
-        if "Dolby Vision Metadata".lower() in [
-            x["side_data_type"].lower() for x in sideDataList
-        ]:
+        if "Dolby Vision Metadata".lower() in [x["side_data_type"].lower() for x in sideDataList]:
             for sideData in streamData["side_data_list"]:
-                if (
-                    sideData["side_data_type"].lower()
-                    == "DOVI configuration record".lower()
-                ):
+                if sideData["side_data_type"].lower() == "DOVI configuration record".lower():
                     if "dv_profile" in sideData:
                         return int(sideData["dv_profile"])
         return None
