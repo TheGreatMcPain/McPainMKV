@@ -192,7 +192,7 @@ def encodeVideo(info: Info):
             exit(1)
         print("Using 'vapoursynthFilter()' from '{}'".format(vapoursynthScriptPath))
     else:
-        video = core.bs.VideoSource(info.sourceMKV, hwdevice="vulkan")
+        video = core.bs.VideoSource(info.sourceMKV, gpu=True)
 
     encodeProcess = None
 
