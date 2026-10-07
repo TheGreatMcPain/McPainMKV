@@ -423,7 +423,11 @@ def convertSubtitles(info: Info):
     for track in info.subInfo:
         if track.extension == "sup":
             fixPGSSubtitles(track)
-            if info.videoInfo and info.videoInfo.convert:
+            if (
+                info.videoInfo
+                and type(info.videoInfo.convert) is not bool
+                and info.videoInfo.convert.encode
+            ):
                 prepForcedSubs(track)
 
     for track in info.subInfo:
