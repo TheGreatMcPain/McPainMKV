@@ -10,7 +10,7 @@ from rich import print
 
 from pathlib import Path
 from subtitle_filter import Subtitles
-from mcpainmkv.info import Info, SubtitleTrackInfo, AudioTrackInfo
+from mcpainmkv.info import Info, SubtitleTrackInfo, AudioTrackInfo, VideoTrackInfo
 from mcpainmkv.videoinfo import videoInfo
 from vapoursynth import core, VideoNode
 
@@ -423,7 +423,8 @@ def convertSubtitles(info: Info):
     for track in info.subInfo:
         if track.extension == "sup":
             fixPGSSubtitles(track)
-            prepForcedSubs(track)
+            if info.videoInfo and info.videoInfo.convert:
+                prepForcedSubs(track)
 
     for track in info.subInfo:
         if track.sup2srt:
