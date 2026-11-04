@@ -115,9 +115,13 @@ def mergeMKV(info: Info):
 
 
 def encodeVideo(info: Info):
+    outFile = Path(info.videoInfo.output)
+    if outFile.exists():
+        print(outFile, "already exists! skipping...")
+        return 0   
+
     inputInfo = videoInfo(info.sourceMKV)
     tempOutFile = Path("temp-" + info.videoInfo.output)
-    outFile = Path(info.videoInfo.output)
     convert = False
     removeDV = False
 
@@ -126,10 +130,6 @@ def encodeVideo(info: Info):
     else:
         convert = info.videoInfo.convert.encode
         removeDV = info.videoInfo.convert.removeDV
-
-    if outFile.exists():
-        print(outFile, "already exists! skipping...")
-        return 0
 
     if not convert:
         if inputInfo.DolbyVision:
