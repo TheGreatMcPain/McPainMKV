@@ -5,10 +5,11 @@
 # Mainly to help handle HDR content, but also to provide extra parameters that
 # are not compression related.
 import json
+import math
+import shutil
 import subprocess as sp
 import sys
-import shutil
-import math
+from pathlib import Path
 
 
 class videoInfo:
@@ -42,7 +43,7 @@ class videoInfo:
     DoviTool = "dovi_tool"
     HDR10PlusTool = "hdr10plus_tool"
 
-    ffprobeInfo = dict()
+    ffprobeInfo = None
 
     def __init__(self, in_file: str):
         self.inFile = in_file
@@ -164,7 +165,7 @@ class videoInfo:
             DoviProcess.communicate()
         else:
             with open(outFile, "wb") as f:
-                ffmpegProcess = sp.run(ffmpegCmd, stdout=f)
+                sp.run(ffmpegCmd, stdout=f, check=True)
         return 0
 
     def extractDoviHEVC(self, outFile: str):
@@ -176,6 +177,10 @@ class videoInfo:
     def extractHDR10PlusMetadata(self):
         if not shutil.which(self.HDR10PlusTool):
             return 1
+        if Path(self.HDR10PlusMetadataFile).is_file():
+            return 0
+
+        tempMetadataFile = "not-done-" + self.HDR10PlusMetadataFile
 
         HDR10PlusCmd = [
             "hdr10plus_tool",
@@ -205,11 +210,16 @@ class videoInfo:
         )
         HDR10PlusProcess = sp.Popen(HDR10PlusCmd, stdin=ffmpegProcess.stdout)
         HDR10PlusProcess.communicate()
+        shutil.move(tempMetadataFile, self.HDR10PlusMetadataFile)
         return 0
 
     def extractDoviRPU(self):
         if not shutil.which(self.DoviTool):
             return 1
+        if Path(self.DVMetadataFile).is_file():
+            return 0
+
+        tempMetadataFile = "not-done-" + self.DVMetadataFile
 
         doviCmd = [
             "dovi_tool",
@@ -217,7 +227,7 @@ class videoInfo:
             "2",
             "extract-rpu",
             "--rpu-out",
-            self.DVMetadataFile,
+            tempMetadataFile,
             "-",
         ]
 
@@ -241,18 +251,17 @@ class videoInfo:
         )
         doviProcess = sp.Popen(doviCmd, stdin=ffmpegProcess.stdout)
         doviProcess.communicate()
+        shutil.move(tempMetadataFile, self.DVMetadataFile)
         return 0
 
     def __getContentLightLeveData(self, sideDataList):
         for sideData in sideDataList:
-            if sideData["side_data_type"].lower() == "Content light level metadata".lower():
-                if len(sideData) > 1:
+            if sideData["side_data_type"].lower() == "Content light level metadata".lower() and len(sideData) > 1:
                     return sideData
 
     def __getMasterDisplayData(self, sideDataList):
         for sideData in sideDataList:
-            if sideData["side_data_type"].lower() == "Mastering display metadata".lower():
-                if len(sideData) > 1:
+            if sideData["side_data_type"].lower() == "Mastering display metadata".lower() and len(sideData) > 1:
                     return sideData
 
     def __getMasterDisplayColorValue(self, colorFraction: str, targetDenominator: int):
@@ -313,8 +322,7 @@ class videoInfo:
     def __isDolbyVision(self, sideDataList, streamData) -> None | int:
         if "Dolby Vision Metadata".lower() in [x["side_data_type"].lower() for x in sideDataList]:
             for sideData in streamData["side_data_list"]:
-                if sideData["side_data_type"].lower() == "DOVI configuration record".lower():
-                    if "dv_profile" in sideData:
+                if sideData["side_data_type"].lower() == "DOVI configuration record".lower() and "dv_profile" in sideData:
                         return int(sideData["dv_profile"])
         return None
 
